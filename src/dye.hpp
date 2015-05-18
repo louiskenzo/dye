@@ -97,8 +97,123 @@ namespace dye {
 		namespace ControlSequence {
 			// Control sequences are specified in §5.4, pp. 10-12
 
+			// ––––––––––––––––––
+			// Final byte in 0x4.
+
+			// TODO ICH Insert Character          §8.3.64
+			// TODO CUU Cursor Up                 §8.3.22
+			// TODO CUD Cursor Down               §8.3.19
+			// TODO CUF Cursor Right              §8.3.20
+			// TODO CUB Cursor Left               §8.3.18
+			// TODO CNL Cursor Next Line          §8.3.12
+			// TODO CPL Cursor Preceding Line     §8.3.13
+			// TODO CHA Cursor Character Absolute §8.3.9
+			// TODO CUP Cursor Position           §8.3.21
+			// TODO CHT Cursor Forward Tabulation §8.3.10
+			// TODO ED  Erase in Page             §8.3.39
+			// TODO EL  Erase in Line             §8.3.41
+			// TODO IL  Insert Line               §8.3.67
+			// TODO DL  Delete Line               §8.3.32
+			// TODO EF  Erase in Field            §8.3.40
+			// TODO EA  Erase in Area             §8.3.37
+
+			// ––––––––––––––––––
+			// Final byte in 0x5.
+
+			// TODO DCH  Delete Character                   §8.3.26
+			// TODO SEE  Select Editing Extent              §8.3.115
+			// TODO CPR  Active Position Report             §8.3.14
+			// TODO SU   Scroll Up                          §8.3.147
+			// TODO SD   Scroll Down                        §8.3.113
+			// TODO NP   Next Page                          §8.3.87
+			// TODO PP   Previous Page                      §8.3.95
+			// TODO CTC  Cursor Tabulation Control          §8.3.17
+			// TODO ECH  Erase Character                    §8.3.38
+			// TODO CVT  Cursor Line Tabulation             §8.3.23
+			// TODO CBT  Cursor Backward Tabulation         §8.3.7
+			// TODO SRS  Start Reversed String              §8.3.137
+			// TODO PTX  Parallel Texts                     §8.3.99
+			// TODO SDS  Start Directer String              §8.3.114
+			// TODO SIMD Select Implicit Movement Direction §8.3.120
+
+			// ––––––––––––––––––
+			// Final byte in 0x6.
+
+			// TODO HPA Character Position Absolute §8.3.57
+			// TODO HPR Character Position Forward  §8.3.59
+			// TODO REP Repeat                      §8.3.103
+			// TODO DA  Device Attributes           §8.3.24
+			// TODO VPA Line Position Absolute      §8.3.158
+			// TODO VPR Line Position Forward       §8.3.160
+			// TODO HVP Character and Line Position §8.3.63
+			// TODO TBC Tabulation Clear            §8.3.154
+			// TODO SM  Set Mode                    §8.3.125
+			// TODO MC  Media Copy                  §8.3.82
+			// TODO HPB Character Position Backward §8.3.58
+			// TODO VPB Line Position Backward      §8.3.159
+			// TODO RM  Reset Mode                  §8.3.106
+
 			// Select Graphic Rendition §8.3.117
 			std::string SGR(const std::string& code) {return C1::CSI + code + "m";}
+
+			// TODO DSR Device Status Report      §8.3.35
+			// TODO DAQ Define Area Qualification §8.3.25
+
+			// –––––––––––––––––––––––––––––––––––––––––––––
+			// Intermediate byte 0x20 and final byte in 0x4.
+
+			// TODO SL   Scroll Left                    §8.3.121
+			// TODO SR   Scroll Right                   §8.3.135
+			// TODO GSM  Graphic Size Modification      §8.3.55
+			// TODO GSS  Graphic Size Selection         §8.3.56
+			// TODO FNT  Font Selection                 §8.3.53
+			// TODO TSS  Thin Space Specification       §8.3.157
+			// TODO JFY  Justify                        §8.3.73
+			// TODO SPI  Spacing Increment              §8.3.132
+			// TODO QUAD Quad                           §8.3.102
+			// TODO SSU  Select Size Unit               §8.3.139
+			// TODO PFS  Page Format Selection          §8.3.91
+			// TODO SHS  Select Character Spacing       §8.3.118
+			// TODO SVS  Select Line Spacing            §8.3.149
+			// TODO IGS  Identify Graphic Subrepertoire §8.3.66
+			// TODO IDCS Identify Device Control String §8.3.65
+
+			// –––––––––––––––––––––––––––––––––––––––––––––
+			// Intermediate byte 0x20 and final byte in 0x5.
+
+			// TODO PPA  Page Position Absolute              §8.3.96
+			// TODO PPR  Page Position Forward               §8.3.98
+			// TODO PPB  Page Position Backward              §8.3.97
+			// TODO SPD  Select Presentation Directions      §8.3.126
+			// TODO DTA  Dimension Text Area                 §8.3.36
+			// TODO SLH  Set Line Home                       §8.3.122
+			// TODO SLL  Set Line Limit                      §8.3.123
+			// TODO FNK  Function Key                        §8.3.52
+			// TODO SPQR Select Print Quality and Rapidity   §8.3.134
+			// TODO SEF  Sheet Eject and Feed                §8.3.116
+			// TODO PEC  Presentation Expand or Contract     §8.3.90
+			// TODO SSW  Select Space Width                  §8.3.140
+			// TODO SACS Set Additional Character Separation §8.3.107
+			// TODO SAPV Select Alternative Presentation Variants §8.3.108
+			// TODO STAB Selective Tabulation                §8.3.144
+			// TODO GCC  Graphic Character Combination       §8.3.54
+
+			// –––––––––––––––––––––––––––––––––––––––––––––
+			// Intermediate byte 0x20 and final byte in 0x6.
+
+			// TODO TATE Tabulation Aligned Trailing Edge §8.3.153
+			// TODO TALE Tabulation Aligned Leading Edge  §8.3.152
+			// TODO TAC  Tabulation Aligned Centred       §8.3.151
+			// TODO TCC  Tabulation Centred on Character  §8.3.155
+			// TODO TSR  Tabulation Stop Remove           §8.3.156
+			// TODO SCO  Set Character Orientation        §8.3.110
+			// TODO SRCS Set Reduced Character Separation §8.3.136
+			// TODO SCS  Set Character Spacing            §8.3.112
+			// TODO SLS  Set Line Spacing                 §8.3.124
+			// TODO SPH  Set Page Home                    §8.3.131
+			// TODO SPL  Set Page Limit                   §8.3.133
+			// TODO SCP  Select Character Path            §8.3.111
+
 		}
 
 		// –––––––––––––––––––––
