@@ -155,6 +155,17 @@ namespace dye {
 
 		namespace IndependentControlFunctions {
 			// The control sequences set of control functions is specified in §5.5, pp. 12-13
+
+			const std::string DMI  = C0::ESC + "`"; // Disable Manual Input      §8.3.34
+			const std::string INT  = C0::ESC + "a"; // Escape                    §8.3.68
+			const std::string EMI  = C0::ESC + "b"; // Enable Manual Input       §8.3.43
+			const std::string RIS  = C0::ESC + "c"; // Reset to Initial State    §8.3.105
+			const std::string CMD  = C0::ESC + "d"; // Coding Method Delimiter   §8.3.11
+			const std::string LS2  = C0::ESC + "n"; // Locking-Shift Two         §8.3.78
+			const std::string LS3  = C0::ESC + "o"; // Locking-Shift Three       §8.3.80
+			const std::string LS3R = C0::ESC + "|"; // Locking-Shift Three Right §8.3.81
+			const std::string LS2R = C0::ESC + "}"; // Locking-Shift Two Right   §8.3.79
+			const std::string LS1R = C0::ESC + "~"; // Locking-Shift One Right   §8.3.77
 		}
 
 		namespace ControlStrings {
