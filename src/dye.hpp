@@ -4,6 +4,7 @@
 #ifndef DYE_GUARD
 #define DYE_GUARD
 
+#include <algorithm>
 #include <ostream>
 #include <string>
 
@@ -60,6 +61,8 @@ namespace dye {
 
 		namespace C1 {
 			// The C1 set of control functions is specified in §5.3, pp. 8-10.
+
+			size_t LENGTH = 2; // Number of bytes in a C1 control function
 
 			const std::string APC = C0::ESC + "_";  // Application Program Command §8.3.2
 			const std::string BPH = C0::ESC + "2";  // Break Permitted Here        §8.3.4
@@ -168,10 +171,68 @@ namespace dye {
 			const std::string LS1R = C0::ESC + "~"; // Locking-Shift One Right   §8.3.77
 		}
 
-		namespace ControlStrings {
+		namespace ControlString {
 			// Control strings are specified in §5.6, p-p. 13
+
+			size_t DELIMITER_LENGTH = C1::LENGTH;
+
+			bool is_opening_delimiter(const std::string& s) {
+				return s == C1::APC
+				    || s == C1::DCS
+				    || s == C1::OSC
+				    || s == C1::PM
+				    || s == C1::SOS;
+			}
+
+			bool is_command_string_character(const char c) {
+				return (c >= '\x08' && c <= '\x0d')
+				    || (c >= '\x20' && c <= '\x7e');
+			}
+
+
+			bool is_command_string(const std::string::const_iterator& begin,
+				                   const std::string::const_iterator& end) {
+				for (std::string::const_iterator c = begin ; c != end ; ++c) {
+					if (is_command_string_character(*c)) return false;
+				}
+
+				return true;
+			}
+
+			bool is_command_string(const std::string& s) {
+				return is_command_string(s.begin(), s.end());
+			}
+
+			bool is_character_string(const std::string::const_iterator& begin,
+				                     const std::string::const_iterator& end) {
+				static const std::string not_character_string = C1::SOS + C1::ST;
+				return std::find_first_of(begin,
+				                          end,
+				                          not_character_string.begin(),
+				                          not_character_string.end()) == end;
+			}
+
+			bool is_character_string(const std::string& s) {
+				return s.find_first_of(C1::SOS + C1::ST) == std::string::npos;
+			}
+
+			bool is_control_string(const std::string& s) {
+				return s.size() >= 2 * C1::LENGTH
+				    && s.substr(0, DELIMITER_LENGTH) == C1::SOS
+				    && s.substr(s.size() - DELIMITER_LENGTH, DELIMITER_LENGTH) == C1::ST
+				    && (is_character_string(s.begin() + DELIMITER_LENGTH,
+				                            s.end()   - DELIMITER_LENGTH)
+				     || is_command_string(s.begin() + DELIMITER_LENGTH,
+				                          s.end()   - DELIMITER_LENGTH));
+			}
+
+			std::string APC(const std::string& s) { return C1::APC + s + C1::ST; }
+			std::string DCS(const std::string& s) { return C1::DCS + s + C1::ST; }
+			std::string OSC(const std::string& s) { return C1::OSC + s + C1::ST; }
+			std::string  PM(const std::string& s) { return C1::PM  + s + C1::ST; }
+			std::string SOS(const std::string& s) { return C1::SOS + s + C1::ST; }
 		}
-		
+
 	}
 
 	// ––––––––––––
