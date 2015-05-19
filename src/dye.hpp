@@ -8,6 +8,7 @@
 #include <cassert>
 #include <ostream>
 #include <string>
+#include <sstream>
 
 namespace dye {
 	namespace ECMA48 {
@@ -108,6 +109,57 @@ namespace dye {
 
 		namespace ControlSequence {
 			// Control sequences are specified in §5.4, pp. 10-12
+
+			// –––––––––––––––––––––––––––––––––––––––––––––––
+			// Helper functions for defining control sequences
+
+			inline std::string _to_string(size_t n) {
+				std::ostringstream s; s<<n; return s.str();
+			};
+
+			class _Pn {
+				public:
+					_Pn(std::string end_delimiter, size_t default_n)
+						: end_delimiter_(end_delimiter)
+						, default_n_(default_n)
+						{}
+
+					inline std::string operator()(size_t n) const {
+						return C1::CSI + _to_string(n) + end_delimiter_;
+					}
+
+					inline const std::string& operator()() const {
+						static const std::string default_parameter_result = operator()(default_n_);
+						return default_parameter_result;
+					}
+
+				private:
+					std::string  end_delimiter_;
+					const size_t default_n_;
+			};
+
+			class _Pn1Pn2 {
+				public:
+					_Pn1Pn2(std::string end_delimiter, size_t default_n1, size_t default_n2)
+						  : end_delimiter_(end_delimiter)
+						  , default_n1_(default_n1)
+						  , default_n2_(default_n2)
+						  {}
+
+					inline std::string operator()(size_t n1, size_t n2) const {
+						return C1::CSI + _to_string(n1) + ";" + _to_string(n2) + end_delimiter_;
+					}
+
+					inline const std::string& operator()() const {
+						static const std::string default_parameter_result = operator()(default_n1_, default_n2_);
+						return default_parameter_result;
+					}
+
+				private:
+					std::string  end_delimiter_;
+					const size_t default_n1_;
+					const size_t default_n2_;
+			};
 
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x4·
