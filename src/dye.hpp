@@ -164,22 +164,22 @@ namespace dye {
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x4·
 
-			// TODO ICH Insert Character          §8.3.64
-			// TODO CUU Cursor Up                 §8.3.22
-			// TODO CUD Cursor Down               §8.3.19
-			// TODO CUF Cursor Right              §8.3.20
-			// TODO CUB Cursor Left               §8.3.18
-			// TODO CNL Cursor Next Line          §8.3.12
-			// TODO CPL Cursor Preceding Line     §8.3.13
-			// TODO CHA Cursor Character Absolute §8.3.9
-			// TODO CUP Cursor Position           §8.3.21
-			// TODO CHT Cursor Forward Tabulation §8.3.10
-			// TODO ED  Erase in Page             §8.3.39
-			// TODO EL  Erase in Line             §8.3.41
-			// TODO IL  Insert Line               §8.3.67
-			// TODO DL  Delete Line               §8.3.32
-			// TODO EF  Erase in Field            §8.3.40
-			// TODO EA  Erase in Area             §8.3.37
+			const _Pn ICH("@", 1); // Insert Character          §8.3.64
+			const _Pn CUU("A", 1); // Cursor Up                 §8.3.22
+			const _Pn CUD("B", 1); // Cursor Down               §8.3.19
+			const _Pn CUF("C", 1); // Cursor Right              §8.3.20
+			const _Pn CUB("D", 1); // Cursor Left               §8.3.18
+			const _Pn CNL("E", 1); // Cursor Next Line          §8.3.12
+			const _Pn CPL("F", 1); // Cursor Preceding Line     §8.3.13
+			const _Pn CHA("G", 1); // Cursor Character Absolute §8.3.9
+			const _Pn1Pn2 CUP("H", 1, 1); // Cursor Position    §8.3.21
+			const _Pn CHT("I", 1); // Cursor Forward Tabulation §8.3.10
+			const _Pn  ED("J", 0); // Erase in Page             §8.3.39
+			const _Pn  EL("K", 0); // Erase in Line             §8.3.41
+			const _Pn  IL("L", 1); // Insert Line               §8.3.67
+			const _Pn  DL("M", 1); // Delete Line               §8.3.32
+			const _Pn  EF("N", 0); // Erase in Field            §8.3.40
+			const _Pn  EA("O", 0); // Erase in Area             §8.3.37
 
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x5·
