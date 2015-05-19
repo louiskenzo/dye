@@ -129,7 +129,8 @@ namespace dye {
 					}
 
 					inline const std::string& operator()() const {
-						static const std::string default_parameter_result = operator()(default_n_);
+						static const std::string default_parameter_result
+						= operator()(default_n_);
 						return default_parameter_result;
 					}
 
@@ -147,11 +148,14 @@ namespace dye {
 						  {}
 
 					inline std::string operator()(size_t n1, size_t n2) const {
-						return C1::CSI + _to_string(n1) + ";" + _to_string(n2) + end_delimiter_;
+						return C1::CSI
+						     + _to_string(n1) + ";" + _to_string(n2)
+						     + end_delimiter_;
 					}
 
 					inline const std::string& operator()() const {
-						static const std::string default_parameter_result = operator()(default_n1_, default_n2_);
+						static const std::string default_parameter_result
+						= operator()(default_n1_, default_n2_);
 						return default_parameter_result;
 					}
 
