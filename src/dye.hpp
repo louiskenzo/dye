@@ -5,6 +5,7 @@
 #define DYE_GUARD
 
 #include <algorithm>
+#include <cassert>
 #include <ostream>
 #include <string>
 
@@ -64,34 +65,45 @@ namespace dye {
 
 			size_t LENGTH = 2; // Number of bytes in a C1 control function
 
-			const std::string APC = C0::ESC + "_";  // Application Program Command §8.3.2
-			const std::string BPH = C0::ESC + "2";  // Break Permitted Here        §8.3.4
-			const std::string CCH = C0::ESC + "T";  // Cancel Character            §8.3.8
-			const std::string CSI = C0::ESC + "[";  // Control Sequence Introducer §8.3.16
-			const std::string DCS = C0::ESC + "P";  // Device Control String       §8.3.27
-			const std::string EPA = C0::ESC + "W";  // End of Guarded Area         §8.3.46
-			const std::string ESA = C0::ESC + "G";  // End of Selected Area        §8.3.47
-			const std::string HTJ = C0::ESC + "I";  // Character Tabulation With Justification §8.3.61
-			const std::string HTS = C0::ESC + "H";  // Character Tabulation Set    §8.3.62
-			const std::string MW  = C0::ESC + "U";  // Message Waiting             §8.3.83
-			const std::string NBH = C0::ESC + "C";  // No Break Here               §8.3.85
-			const std::string NEL = C0::ESC + "E";  // Next Line                   §8.3.86
-			const std::string OSC = C0::ESC + "]";  // Operating System Command    §8.3.89
-			const std::string PLD = C0::ESC + "K";  // Partial Line Forward        §8.3.92
-			const std::string PLU = C0::ESC + "L";  // Partial Line Backward       §8.3.93
-			const std::string PM  = C0::ESC + "^";  // Privacy Message             §8.3.94
-			const std::string PU1 = C0::ESC + "Q";  // Private Use 1               §8.3.100
-			const std::string PU2 = C0::ESC + "R";  // Private Use 2               §8.3.101
-			const std::string RI  = C0::ESC + "M";  // Reverse Line Feed           §8.3.104
-			const std::string SCI = C0::ESC + "Z";  // Single Character Introducer §8.3.109
-			const std::string SOS = C0::ESC + "X";  // Start Of String             §8.3.128
-			const std::string SPA = C0::ESC + "V";  // Start of Guarded Area       §8.3.129
-			const std::string SSA = C0::ESC + "F";  // Start of Selected Area      §8.3.138
-			const std::string SS2 = C0::ESC + "N";  // Single Shift Two            §8.3.141
-			const std::string SS3 = C0::ESC + "O";  // Single Shift Three          §8.3.142
-			const std::string ST  = C0::ESC + "\\"; // String Terminator           §8.3.143
-			const std::string STS = C0::ESC + "S";  // Set Transmit State          §8.3.145
-			const std::string VTS = C0::ESC + "J";  // Line Tabulation Set         §8.3.162
+			// ––––––––––––––––––––––––––––––––––––––––––––––––––
+			// Helper functions for defining C1 control functions
+
+			std::string _C1(std::string code) {
+				assert(code.size()==1);
+				return C0::ESC + code;
+			}
+
+			// –––––––––––––––––––––––––––––––
+			// C1 control function definitions
+
+			const std::string APC = _C1("_");  // Application Program Command §8.3.2
+			const std::string BPH = _C1("2");  // Break Permitted Here        §8.3.4
+			const std::string CCH = _C1("T");  // Cancel Character            §8.3.8
+			const std::string CSI = _C1("[");  // Control Sequence Introducer §8.3.16
+			const std::string DCS = _C1("P");  // Device Control String       §8.3.27
+			const std::string EPA = _C1("W");  // End of Guarded Area         §8.3.46
+			const std::string ESA = _C1("G");  // End of Selected Area        §8.3.47
+			const std::string HTJ = _C1("I");  // Character Tabulation With Justification §8.3.61
+			const std::string HTS = _C1("H");  // Character Tabulation Set    §8.3.62
+			const std::string MW  = _C1("U");  // Message Waiting             §8.3.83
+			const std::string NBH = _C1("C");  // No Break Here               §8.3.85
+			const std::string NEL = _C1("E");  // Next Line                   §8.3.86
+			const std::string OSC = _C1("]");  // Operating System Command    §8.3.89
+			const std::string PLD = _C1("K");  // Partial Line Forward        §8.3.92
+			const std::string PLU = _C1("L");  // Partial Line Backward       §8.3.93
+			const std::string PM  = _C1("^");  // Privacy Message             §8.3.94
+			const std::string PU1 = _C1("Q");  // Private Use 1               §8.3.100
+			const std::string PU2 = _C1("R");  // Private Use 2               §8.3.101
+			const std::string RI  = _C1("M");  // Reverse Line Feed           §8.3.104
+			const std::string SCI = _C1("Z");  // Single Character Introducer §8.3.109
+			const std::string SOS = _C1("X");  // Start Of String             §8.3.128
+			const std::string SPA = _C1("V");  // Start of Guarded Area       §8.3.129
+			const std::string SSA = _C1("F");  // Start of Selected Area      §8.3.138
+			const std::string SS2 = _C1("N");  // Single Shift Two            §8.3.141
+			const std::string SS3 = _C1("O");  // Single Shift Three          §8.3.142
+			const std::string ST  = _C1("\\"); // String Terminator           §8.3.143
+			const std::string STS = _C1("S");  // Set Transmit State          §8.3.145
+			const std::string VTS = _C1("J");  // Line Tabulation Set         §8.3.162
 		}
 
 		namespace ControlSequence {
