@@ -97,8 +97,8 @@ namespace dye {
 		namespace ControlSequence {
 			// Control sequences are specified in §5.4, pp. 10-12
 
-			// ––––––––––––––––––
-			// Final byte in 0x4.
+			// –––––––––––––––––––––––––––––––––––––––––
+			// Control sequences with final byte in 0x4·
 
 			// TODO ICH Insert Character          §8.3.64
 			// TODO CUU Cursor Up                 §8.3.22
@@ -117,8 +117,8 @@ namespace dye {
 			// TODO EF  Erase in Field            §8.3.40
 			// TODO EA  Erase in Area             §8.3.37
 
-			// ––––––––––––––––––
-			// Final byte in 0x5.
+			// –––––––––––––––––––––––––––––––––––––––––
+			// Control sequences with final byte in 0x5·
 
 			// TODO DCH  Delete Character                   §8.3.26
 			// TODO SEE  Select Editing Extent              §8.3.115
@@ -136,8 +136,8 @@ namespace dye {
 			// TODO SDS  Start Directer String              §8.3.114
 			// TODO SIMD Select Implicit Movement Direction §8.3.120
 
-			// ––––––––––––––––––
-			// Final byte in 0x6.
+			// –––––––––––––––––––––––––––––––––––––––––
+			// Control sequences with final byte in 0x6·
 
 			// TODO HPA Character Position Absolute §8.3.57
 			// TODO HPR Character Position Forward  §8.3.59
@@ -159,8 +159,8 @@ namespace dye {
 			// TODO DSR Device Status Report      §8.3.35
 			// TODO DAQ Define Area Qualification §8.3.25
 
-			// –––––––––––––––––––––––––––––––––––––––––––––
-			// Intermediate byte 0x20 and final byte in 0x4.
+			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+			// Control sequences with intermediate byte 0x20 and final byte in 0x4·
 
 			// TODO SL   Scroll Left                    §8.3.121
 			// TODO SR   Scroll Right                   §8.3.135
@@ -178,8 +178,8 @@ namespace dye {
 			// TODO IGS  Identify Graphic Subrepertoire §8.3.66
 			// TODO IDCS Identify Device Control String §8.3.65
 
-			// –––––––––––––––––––––––––––––––––––––––––––––
-			// Intermediate byte 0x20 and final byte in 0x5.
+			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+			// Control sequences with intermediate byte 0x20 and final byte in 0x5·
 
 			// TODO PPA  Page Position Absolute              §8.3.96
 			// TODO PPR  Page Position Forward               §8.3.98
@@ -198,8 +198,8 @@ namespace dye {
 			// TODO STAB Selective Tabulation                §8.3.144
 			// TODO GCC  Graphic Character Combination       §8.3.54
 
-			// –––––––––––––––––––––––––––––––––––––––––––––
-			// Intermediate byte 0x20 and final byte in 0x6.
+			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+			// Control sequences with intermediate byte 0x20 and final byte in 0x6·
 
 			// TODO TATE Tabulation Aligned Trailing Edge §8.3.153
 			// TODO TALE Tabulation Aligned Leading Edge  §8.3.152
