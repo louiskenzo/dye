@@ -117,6 +117,7 @@ namespace dye {
 				std::ostringstream s; s<<n; return s.str();
 			};
 
+			// (Pn) §8.1.d
 			class _Pn {
 				public:
 					_Pn(std::string end_delimiter, size_t default_n)
@@ -124,11 +125,13 @@ namespace dye {
 						, default_n_(default_n)
 						{}
 
-					inline std::string operator()(size_t n) const {
+					inline
+					std::string operator()(size_t n) const {
 						return C1::CSI + _to_string(n) + end_delimiter_;
 					}
 
-					inline const std::string& operator()() const {
+					inline
+					const std::string& operator()() const {
 						static const std::string default_parameter_result
 						= operator()(default_n_);
 						return default_parameter_result;
@@ -139,6 +142,7 @@ namespace dye {
 					const size_t default_n_;
 			};
 
+			// (Pn1;Pn2) §8.1.e
 			class _Pn1Pn2 {
 				public:
 					_Pn1Pn2(std::string end_delimiter, size_t default_n1, size_t default_n2)
@@ -147,13 +151,15 @@ namespace dye {
 						  , default_n2_(default_n2)
 						  {}
 
-					inline std::string operator()(size_t n1, size_t n2) const {
+					inline
+					std::string operator()(size_t n1, size_t n2) const {
 						return C1::CSI
 						     + _to_string(n1) + ";" + _to_string(n2)
 						     + end_delimiter_;
 					}
 
-					inline const std::string& operator()() const {
+					inline
+					const std::string& operator()() const {
 						static const std::string default_parameter_result
 						= operator()(default_n1_, default_n2_);
 						return default_parameter_result;
@@ -163,6 +169,77 @@ namespace dye {
 					std::string  end_delimiter_;
 					const size_t default_n1_;
 					const size_t default_n2_;
+			};
+
+			// (Ps...) §8.1.i
+			class _Psx {
+				public:
+					_Psx(std::string end_delimiter, int default_s = -1)
+						  : end_delimiter_(end_delimiter)
+						  , default_s_(default_s)
+					{
+						assert(default_s >= -1);
+					}
+
+					inline
+					const std::string& operator()() const {
+						static std::string default_parameter_result;
+						if (has_default())
+							default_parameter_result = operator()(default_s_);
+						else
+							default_parameter_result = C1::CSI + end_delimiter_;
+						return default_parameter_result;
+					}
+
+					inline
+					std::string operator()(size_t s) const {
+						return C1::CSI + _to_string(s)
+						               + end_delimiter_;
+					}
+
+					inline
+					std::string operator()(size_t s1, size_t s2) const {
+						return C1::CSI + _to_string(s1)
+						         + ";" + _to_string(s2)
+						               + end_delimiter_;
+					}
+
+					inline
+					std::string operator()(size_t s1, size_t s2, size_t s3) const {
+						return C1::CSI + _to_string(s1)
+						         + ";" + _to_string(s2)
+						         + ";" + _to_string(s3)
+						               + end_delimiter_;
+					}
+
+					inline
+					std::string operator()(size_t s1, size_t s2, size_t s3, size_t s4) const {
+						return C1::CSI + _to_string(s1)
+						         + ";" + _to_string(s2)
+						         + ";" + _to_string(s3)
+						         + ";" + _to_string(s4)
+						               + end_delimiter_;
+					}
+
+					inline
+					std::string operator()(size_t s1,
+						               size_t s2,
+						               size_t s3,
+						               size_t s4,
+						               size_t s5) const {
+						return C1::CSI + _to_string(s1)
+						         + ";" + _to_string(s2)
+						         + ";" + _to_string(s3)
+						         + ";" + _to_string(s4)
+						         + ";" + _to_string(s5)
+						               + end_delimiter_;
+					}
+
+				private:
+					std::string end_delimiter_;
+					const int   default_s_;
+
+					inline bool has_default() const { return default_s_<0; }
 			};
 
 			// –––––––––––––––––––––––––––––––––––––––––
@@ -220,10 +297,7 @@ namespace dye {
 			// TODO HPB Character Position Backward §8.3.58
 			// TODO VPB Line Position Backward      §8.3.159
 			// TODO RM  Reset Mode                  §8.3.106
-
-			// Select Graphic Rendition §8.3.117
-			std::string SGR(const std::string& code) {return C1::CSI + code + "m";}
-
+			_Psx SGR("m", 0); // Select Graphic Rendition §8.3.117
 			// TODO DSR Device Status Report      §8.3.35
 			// TODO DAQ Define Area Qualification §8.3.25
 
@@ -287,57 +361,78 @@ namespace dye {
 		// –––––––––––––––––––––
 		// SGR control sequences
 
-		const std::string reset = ControlSequence::SGR("");
+		const std::string                  reset = ControlSequence::SGR(0);
+		const std::string                   bold = ControlSequence::SGR(1);
+		const std::string                  faint = ControlSequence::SGR(2);
+		const std::string                 italic = ControlSequence::SGR(3);
+		const std::string             underlined = ControlSequence::SGR(4);
+		const std::string          slow_blinking = ControlSequence::SGR(5);
+		const std::string         rapid_blinking = ControlSequence::SGR(6);
+		const std::string               negative = ControlSequence::SGR(7);
+		const std::string              concealed = ControlSequence::SGR(8);
+		const std::string                crossed = ControlSequence::SGR(9);
+		const std::string                  font0 = ControlSequence::SGR(11);
+		const std::string                  font1 = ControlSequence::SGR(11);
+		const std::string                  font2 = ControlSequence::SGR(12);
+		const std::string                  font3 = ControlSequence::SGR(13);
+		const std::string                  font4 = ControlSequence::SGR(14);
+		const std::string                  font5 = ControlSequence::SGR(15);
+		const std::string                  font6 = ControlSequence::SGR(16);
+		const std::string                  font7 = ControlSequence::SGR(17);
+		const std::string                  font8 = ControlSequence::SGR(18);
+		const std::string                  font9 = ControlSequence::SGR(19);
+		const std::string                fraktur = ControlSequence::SGR(20);
+		const std::string      doubly_underlined = ControlSequence::SGR(21);
+		const std::string     not_bold_not_faint = ControlSequence::SGR(22);
+		const std::string not_italic_not_fraktur = ControlSequence::SGR(23);
+		const std::string         not_underlined = ControlSequence::SGR(24);
+		const std::string           not_blinking = ControlSequence::SGR(25);
+		const std::string         positive_image = ControlSequence::SGR(27);
+		const std::string               revealed = ControlSequence::SGR(28);
+		const std::string            not_crossed = ControlSequence::SGR(29);
 
-		const std::string bold           = ControlSequence::SGR("1");
-		const std::string faint          = ControlSequence::SGR("2");
-		const std::string italic         = ControlSequence::SGR("3");
-		const std::string underline      = ControlSequence::SGR("4");
-		const std::string slow_blinking  = ControlSequence::SGR("5");
-		const std::string rapid_blinking = ControlSequence::SGR("6");
-		const std::string negative       = ControlSequence::SGR("7");
-		const std::string concealed      = ControlSequence::SGR("8");
-		const std::string crossed        = ControlSequence::SGR("9");
+		const std::string   black = ControlSequence::SGR(30);
+		const std::string     red = ControlSequence::SGR(31);
+		const std::string   green = ControlSequence::SGR(32);
+		const std::string  yellow = ControlSequence::SGR(33);
+		const std::string    blue = ControlSequence::SGR(34);
+		const std::string magenta = ControlSequence::SGR(35);
+		const std::string    cyan = ControlSequence::SGR(36);
+		const std::string   white = ControlSequence::SGR(37);
+		std::string foreground_256(size_t code) { return ControlSequence::SGR(38,5,code); }
+		std::string foreground_24bit(size_t r, size_t g, size_t b) { return ControlSequence::SGR(38,2,r,g,b); }
+		const std::string default_color = ControlSequence::SGR(39);
 
-		const std::string font0 = ControlSequence::SGR("11");
-		const std::string font1 = ControlSequence::SGR("11");
-		const std::string font2 = ControlSequence::SGR("12");
-		const std::string font3 = ControlSequence::SGR("13");
-		const std::string font4 = ControlSequence::SGR("14");
-		const std::string font5 = ControlSequence::SGR("15");
-		const std::string font6 = ControlSequence::SGR("16");
-		const std::string font7 = ControlSequence::SGR("17");
-		const std::string font8 = ControlSequence::SGR("18");
-		const std::string font9 = ControlSequence::SGR("19");
-		const std::string fraktur = ControlSequence::SGR("20");
-		const std::string double_underline = ControlSequence::SGR("21");
-		const std::string nobold_nofaint = ControlSequence::SGR("22");
-		const std::string noitalic_nofraktur = ControlSequence::SGR("23");
-		const std::string nounderline = ControlSequence::SGR("24");
-		const std::string noblinking = ControlSequence::SGR("25");
-		const std::string positiveimage = ControlSequence::SGR("27");
-		const std::string revealed = ControlSequence::SGR("28");
-		const std::string notcrossed = ControlSequence::SGR("29");
+		const std::string   black_background = ControlSequence::SGR(40);
+		const std::string     red_background = ControlSequence::SGR(41);
+		const std::string   green_background = ControlSequence::SGR(42);
+		const std::string  yellow_background = ControlSequence::SGR(43);
+		const std::string    blue_background = ControlSequence::SGR(44);
+		const std::string magenta_background = ControlSequence::SGR(45);
+		const std::string    cyan_background = ControlSequence::SGR(46);
+		const std::string   white_background = ControlSequence::SGR(47);
+		std::string background_256(size_t code) { return ControlSequence::SGR(48,5,code); }
+		std::string background_24bit(size_t r, size_t g, size_t b) { return ControlSequence::SGR(48,2,r,g,b); }
+		const std::string default_background = ControlSequence::SGR(49);
 
-		const std::string black   = ControlSequence::SGR("30");
-		const std::string red     = ControlSequence::SGR("31");
-		const std::string green   = ControlSequence::SGR("32");
-		const std::string yellow  = ControlSequence::SGR("33");
-		const std::string blue    = ControlSequence::SGR("34");
-		const std::string magenta = ControlSequence::SGR("35");
-		const std::string cyan    = ControlSequence::SGR("36");
-		const std::string white   = ControlSequence::SGR("37");
-		const std::string defaultcolor = ControlSequence::SGR("39");
+		const std::string                   framed = ControlSequence::SGR(51);
+		const std::string                encircled = ControlSequence::SGR(52);
+		const std::string                overlined = ControlSequence::SGR(53);
+		const std::string not_framed_not_encircled = ControlSequence::SGR(54);
+		const std::string            not_overlined = ControlSequence::SGR(55);
 
-		const std::string bg_black   = ControlSequence::SGR("40");
-		const std::string bg_red     = ControlSequence::SGR("41");
-		const std::string bg_green   = ControlSequence::SGR("42");
-		const std::string bg_yellow  = ControlSequence::SGR("43");
-		const std::string bg_blue    = ControlSequence::SGR("44");
-		const std::string bg_magenta = ControlSequence::SGR("45");
-		const std::string bg_cyan    = ControlSequence::SGR("46");
-		const std::string bg_white   = ControlSequence::SGR("47");
-		const std::string bg_default = ControlSequence::SGR("49");
+		const std::string ideogram_underline        = ControlSequence::SGR(60);
+		const std::string ideogram_double_underline = ControlSequence::SGR(61);
+		const std::string ideogram_overline         = ControlSequence::SGR(62);
+		const std::string ideogram_double_overline  = ControlSequence::SGR(63);
+		const std::string ideogram_stress_marking   = ControlSequence::SGR(64);
+		const std::string not_ideogram              = ControlSequence::SGR(65);
+
+		const std::string        right_side_line = ideogram_underline;
+		const std::string double_right_side_line = ideogram_double_underline;
+		const std::string         left_side_line = ideogram_overline;
+		const std::string  double_left_side_line = ideogram_double_overline;
+		const std::string          not_side_line = not_ideogram;
 
 		namespace IndependentControlFunctions {
 			// The control sequences set of control functions is specified in §5.5, pp. 12-13
