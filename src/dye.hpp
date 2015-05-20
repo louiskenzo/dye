@@ -569,6 +569,7 @@ namespace dye {
 	const Manipulator magenta(ECMA48::magenta);
 	const Manipulator    cyan(ECMA48::cyan);
 	const Manipulator   white(ECMA48::white);
+	const Manipulator   reset(ECMA48::default_color);
 }
 
 #endif
