@@ -580,6 +580,30 @@ namespace dye {
 	const Manipulator    cyan_bg(ECMA48::cyan_background);
 	const Manipulator   white_bg(ECMA48::white_background);
 	const Manipulator   reset_bg(ECMA48::default_background);
+
+	Manipulator fg(size_t i) {
+		assert(i <= 255);
+		return ECMA48::foreground_256(i);
+	}
+
+	Manipulator fg(size_t r, size_t g, size_t b) {
+		assert(r <= 255);
+		assert(g <= 255);
+		assert(b <= 255);
+		return ECMA48::foreground_24bit(r,g,b);
+	}
+
+	Manipulator bg(size_t i) {
+		assert(i <= 255);
+		return ECMA48::background_256(i);
+	}
+
+	Manipulator bg(size_t r, size_t g, size_t b) {
+		assert(r <= 255);
+		assert(g <= 255);
+		assert(b <= 255);
+		return ECMA48::background_24bit(r,g,b);
+	}
 }
 
 #endif
