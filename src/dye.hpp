@@ -570,6 +570,16 @@ namespace dye {
 	const Manipulator    cyan(ECMA48::cyan);
 	const Manipulator   white(ECMA48::white);
 	const Manipulator   reset(ECMA48::default_color);
+
+	const Manipulator   black_bg(ECMA48::black_background);
+	const Manipulator     red_bg(ECMA48::red_background);
+	const Manipulator   green_bg(ECMA48::green_background);
+	const Manipulator  yellow_bg(ECMA48::yellow_background);
+	const Manipulator    blue_bg(ECMA48::blue_background);
+	const Manipulator magenta_bg(ECMA48::magenta_background);
+	const Manipulator    cyan_bg(ECMA48::cyan_background);
+	const Manipulator   white_bg(ECMA48::white_background);
+	const Manipulator   reset_bg(ECMA48::default_background);
 }
 
 #endif
