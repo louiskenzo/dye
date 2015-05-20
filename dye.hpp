@@ -183,8 +183,8 @@ namespace dye {
 			class _Psx {
 				public:
 					_Psx(std::string end_delimiter, int default_s = -1)
-						  : end_delimiter_(end_delimiter)
-						  , default_s_(default_s)
+						: end_delimiter_(end_delimiter)
+						, default_s_(default_s)
 					{
 						assert(default_s >= -1);
 					}
@@ -231,10 +231,10 @@ namespace dye {
 
 					inline
 					std::string operator()(size_t s1,
-						               size_t s2,
-						               size_t s3,
-						               size_t s4,
-						               size_t s5) const {
+					                       size_t s2,
+					                       size_t s3,
+					                       size_t s4,
+					                       size_t s5) const {
 						return C1::CSI + _to_string(s1)
 						         + ";" + _to_string(s2)
 						         + ";" + _to_string(s3)
@@ -477,7 +477,7 @@ namespace dye {
 
 
 			bool is_command_string(const std::string::const_iterator& begin,
-				                   const std::string::const_iterator& end) {
+			                       const std::string::const_iterator& end) {
 				for (std::string::const_iterator c = begin ; c != end ; ++c) {
 					if (is_command_string_character(*c)) return false;
 				}
@@ -490,7 +490,7 @@ namespace dye {
 			}
 
 			bool is_character_string(const std::string::const_iterator& begin,
-				                     const std::string::const_iterator& end) {
+			                         const std::string::const_iterator& end) {
 				static const std::string not_character_string = C1::SOS + C1::ST;
 				return std::find_first_of(begin,
 				                          end,
