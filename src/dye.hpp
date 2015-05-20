@@ -526,12 +526,34 @@ namespace dye {
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
 namespace dye {
+	template <typename ObjectType>
+	class ObjectManipulator {
+		const std::string _control_sequence;
+		const ObjectType& _object;
+		public:
+			ObjectManipulator(const std::string& control_sequence, const ObjectType& object)
+				: _control_sequence(control_sequence), _object(object) {}
+			const std::string& control_sequence() const {return _control_sequence;}
+			const ObjectType& object() const {return _object; }
+	};
+
+	template <typename ObjectType>
+	std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
+		stream << m.control_sequence()
+		       << m.object()
+		       << ECMA48::default_color << ECMA48::default_background;
+		return stream;
+	}
 
 	class Manipulator {
-		std::string _control_sequence;
+		const std::string _control_sequence;
 		public:
 			Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
-			const std::string& control_sequence() const {return _control_sequence;}
+			template <typename ObjectType>
+			ObjectManipulator<ObjectType> operator()(const ObjectType& object) {
+				return ObjectManipulator<ObjectType>(_control_sequence, object);
+			}
+			const std::string& control_sequence() const {return _control_sequence; }
 	};
 
 	std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
