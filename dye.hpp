@@ -576,6 +576,133 @@ namespace dye {
 }
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                               XTerm 256-color                              //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	namespace xterm256 {
+		// Analysis of how 256-color codes are generated:
+		// - The first 16 indices are the standard colors (0-7 for non-bold, 8-15 for
+		//   bold).
+		// - The middle 216 (6*6*6) colors are extended xterm colors. They are organized
+		//   in 6 lines of 36 codes, with internally uniform, increasing red values from
+		//   0 to 255; each line is subdivided in 6 blocks of 6 codes with internally
+		//   uniform, increasing green values from 0 to 255; each block is made of 6
+		//   codes, with increasing blue values from 0 to 255. Thus the RGB colorspace
+		//   is quantized in 255/6 = 42.5 increments. Note that 6 of those colors are
+		//   also grey levels, that coincide with grey levels in the last 24-color
+		//   block.
+		// - The last 24 colors are levels of grey, from black to white.
+
+		// –––––––––
+		// Constants
+
+		// Index ranges
+
+		const size_t STANDARD_START = 0;
+		const size_t STANDARD_END   = 15;
+		const size_t STANDARD_RANGE = STANDARD_END - STANDARD_START + 1;
+		const size_t STANDARD_LEVELS = STANDARD_RANGE;
+		const size_t EXTENDED_START  = 16;
+		const size_t EXTENDED_END    = 231;
+		const size_t EXTENDED_RANGE  = EXTENDED_END - EXTENDED_START + 1;
+		const size_t EXTENDED_LEVELS = 6;
+		const size_t GREY_START  = 232;
+		const size_t GREY_END    = 255;
+		const size_t GREY_RANGE  = GREY_END - GREY_START + 1;
+		const size_t GREY_LEVELS = GREY_RANGE;
+
+		// RGB space structure
+
+		const float  RGB_EXTENT = 255.0f;
+		const float _UNIT_CUBE_DIAGONAL = std::sqrt(3.0f);
+		const float  _RGB_CUBE_DIAGONAL = RGB_EXTENT * _UNIT_CUBE_DIAGONAL;
+		const float EXTENDED_STEP = RGB_EXTENT / (EXTENDED_LEVELS - 1);
+		const float     GREY_STEP = RGB_EXTENT /     (GREY_LEVELS - 1);
+
+		// –––––––––––––––––
+		// Utility functions
+
+		int _round(float x) {
+			assert(x >= 0.0f);
+			return std::floor(x + 0.5f);
+		}
+
+		float _norm(float x, float y, float z) {
+			return std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
+		}
+
+		float _distance(float x1, float y1, float z1,
+			            float x2, float y2, float z2) {
+			return _norm(x2-x1, y2-y1, z2-z1);
+		}
+
+		float distance_to_identity_line(float x, float y, float z) {
+		    // Returns the distance of the 3D point with coordinates (x,y,z) to the x=y=z line.
+		    // Simplification of http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+		    return std::sqrt(std::pow(z-y,2) + std::pow(z-x,2) + std::pow(y-x,2))
+		         / std::sqrt(3.0f);
+		}
+
+		size_t _quantize(float x, float step) {
+			return _round(x/step);
+		}
+
+		size_t _quantize_extended(float x) {
+			return _quantize(x, EXTENDED_STEP);
+		}
+
+		size_t _quantize_grey(float x) {
+			return _quantize(x, GREY_STEP);
+		}
+
+		// ––––––––––––––––
+		// Public interface
+
+		RGB rgb_from_grey_level(size_t l) {
+			assert(l >= GREY_START);
+			assert(l <= GREY_END);
+			return RGB(l*GREY_STEP, l*GREY_STEP, l*GREY_STEP);
+		}
+
+		RGB rgb_from_extended_levels(size_t rl, size_t gl, size_t bl) {
+			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
+			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
+			assert(bl >= 0 && bl <= EXTENDED_LEVELS);
+			return RGB(rl*EXTENDED_STEP, gl*EXTENDED_STEP, bl*EXTENDED_STEP);
+		}
+
+		size_t ECMA48_from_grey_level(size_t l) {
+			return GREY_START + l;
+		}
+
+		size_t ECMA48_from_extended_level(size_t rl, size_t gl, size_t bl) {
+			return EXTENDED_START + rl*36 + gl*6 + bl;
+		}
+
+		size_t ECMA48_from_rgb(size_t r, size_t g, size_t b) {
+			const RGB rgb(r,g,b);
+			const size_t qr = _quantize_extended(r * EXTENDED_STEP);
+			const size_t qg = _quantize_extended(g * EXTENDED_STEP);
+			const size_t qb = _quantize_extended(b * EXTENDED_STEP);
+			const RGB qrgb(qr,qg,qb);
+
+			float d_along_xyz = rgb.distance_along_identity_line();
+			size_t closest_grey_level = _quantize(d_along_xyz, GREY_STEP * _UNIT_CUBE_DIAGONAL);
+			RGB closest_grey = rgb_from_grey_level(closest_grey_level);
+
+			float d_to_closest_grey = rgb.distance(closest_grey);
+			float d_to_closest_extended = rgb.distance(qrgb);
+
+			if (d_to_closest_grey < d_to_closest_extended)
+				return ECMA48_from_grey_level(closest_grey_level);
+			else
+				return ECMA48_from_extended_level(qr,qg,qb);
+		}
+	}
+}
+
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 //                                Manipulators                                //
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
