@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <ostream>
 #include <string>
 #include <sstream>
@@ -519,6 +520,59 @@ namespace dye {
 			std::string SOS(const std::string& s) { return C1::SOS + s + C1::ST; }
 		}
 	}
+}
+
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                                  RGB model                                 //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	class RGB {
+		public:
+			float x,y,z;
+
+			RGB(float x, float y, float z)
+				: x(x), y(y), z(z) {
+				assert(_valid());
+			}
+
+			RGB operator*(float m) {
+				return RGB(x*m, y*m, z*m);
+			}
+
+			float norm() const {
+				return std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
+			}
+
+			float distance(const RGB& other) const {
+				return std::sqrt(std::pow(other.x-x,2)
+					           + std::pow(other.y-y,2)
+					           + std::pow(other.z-z,2));
+			}
+
+			float distance_to_identity_line() const {
+			    // Returns the distance of the 3D point with coordinates (x,y,z) to the x=y=z line.
+			    // Simplification of http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+			    return std::sqrt(std::pow(z-y,2) + std::pow(z-x,2) + std::pow(y-x,2))
+			         / std::sqrt(3.0f);
+			}
+
+			float distance_along_identity_line() const {
+				return std::sqrt(std::pow(norm(),2) - std::pow(distance_to_identity_line(),2));
+			}
+
+			RGB projection_on_identity_line() const {
+				const float d = distance_along_identity_line();
+				return RGB(d,d,d);
+			}
+
+		private:
+			bool _valid() const {
+				return (x>=0.0f && x<=255.0f) &&
+				       (y>=0.0f && y<=255.0f) &&
+				       (z>=0.0f && z<=255.0f);
+			}
+	};
 }
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
