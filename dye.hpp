@@ -573,6 +573,11 @@ namespace dye {
 				       (b>=0.0f && b<=255.0f);
 			}
 	};
+
+	std::ostream& operator<<(std::ostream& stream, const RGB& rgb) {
+		stream << "(" << rgb.r << "," << rgb.g << "," << rgb.b << ")";
+		return stream;
+	}
 }
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
