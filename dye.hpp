@@ -643,22 +643,6 @@ namespace dye {
 			return std::floor(x + 0.5f);
 		}
 
-		float _norm(float x, float y, float z) {
-			return std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
-		}
-
-		float _distance(float x1, float y1, float z1,
-			            float x2, float y2, float z2) {
-			return _norm(x2-x1, y2-y1, z2-z1);
-		}
-
-		float distance_to_identity_line(float x, float y, float z) {
-		    // Returns the distance of the 3D point with coordinates (x,y,z) to the x=y=z line.
-		    // Simplification of http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-		    return std::sqrt(std::pow(z-y,2) + std::pow(z-x,2) + std::pow(y-x,2))
-		         / std::sqrt(3.0f);
-		}
-
 		size_t _quantize(float x, float step) {
 			return _round(x/step);
 		}
