@@ -608,6 +608,10 @@ namespace dye {
 		const size_t STANDARD_END   = 15;
 		const size_t STANDARD_RANGE = STANDARD_END - STANDARD_START + 1;
 		const size_t STANDARD_LEVELS = STANDARD_RANGE;
+		const size_t STANDARD_DIM_START = 0;
+		const size_t STANDARD_DIM_END   = 7;
+		const size_t STANDARD_BRIGHT_START = 8;
+		const size_t STANDARD_BRIGHT_END   = 15;
 		const size_t EXTENDED_START  = 16;
 		const size_t EXTENDED_END    = 231;
 		const size_t EXTENDED_RANGE  = EXTENDED_END - EXTENDED_START + 1;
