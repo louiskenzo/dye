@@ -608,14 +608,18 @@ namespace dye {
 		const size_t STANDARD_END   = 15;
 		const size_t STANDARD_RANGE = STANDARD_END - STANDARD_START + 1;
 		const size_t STANDARD_LEVELS = STANDARD_RANGE;
+
 		const size_t STANDARD_DIM_START = 0;
 		const size_t STANDARD_DIM_END   = 7;
+
 		const size_t STANDARD_BRIGHT_START = 8;
 		const size_t STANDARD_BRIGHT_END   = 15;
+
 		const size_t EXTENDED_START  = 16;
 		const size_t EXTENDED_END    = 231;
 		const size_t EXTENDED_RANGE  = EXTENDED_END - EXTENDED_START + 1;
 		const size_t EXTENDED_LEVELS = 6;
+
 		const size_t GREY_START  = 232;
 		const size_t GREY_END    = 255;
 		const size_t GREY_RANGE  = GREY_END - GREY_START + 1;
@@ -624,8 +628,10 @@ namespace dye {
 		// RGB space structure
 
 		const float  RGB_EXTENT = 255.0f;
+
 		const float _UNIT_CUBE_DIAGONAL = std::sqrt(3.0f);
 		const float  _RGB_CUBE_DIAGONAL = RGB_EXTENT * _UNIT_CUBE_DIAGONAL;
+
 		const float EXTENDED_STEP = RGB_EXTENT / (EXTENDED_LEVELS - 1);
 		const float     GREY_STEP = RGB_EXTENT /     (GREY_LEVELS - 1);
 
