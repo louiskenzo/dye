@@ -780,29 +780,75 @@ namespace dye {
 	const Manipulator   white_bg(ECMA48::white_background);
 	const Manipulator   reset_bg(ECMA48::default_background);
 
-	Manipulator fg(size_t i) {
+	// –––––––––––––––––––––––––
+	// xterm256 RGB manipulators
+
+	Manipulator fg256(size_t i) {
 		assert(i <= 255);
 		return ECMA48::foreground_256(i);
 	}
 
-	Manipulator fg(size_t r, size_t g, size_t b) {
+	Manipulator fg256(size_t r, size_t g, size_t b) {
+		assert(r <= 255);
+		assert(g <= 255);
+		assert(b <= 255);
+		return ECMA48::foreground_256(xterm256::ECMA48_from_rgb(r,g,b));
+	}
+
+	Manipulator bg256(size_t i) {
+		assert(i <= 255);
+		return ECMA48::background_256(i);
+	}
+
+	Manipulator bg256(size_t r, size_t g, size_t b) {
+		assert(r <= 255);
+		assert(g <= 255);
+		assert(b <= 255);
+		return ECMA48::background_256(xterm256::ECMA48_from_rgb(r,g,b));
+	}
+
+	// –––––––––––––––––––––––
+	// 24-bit RGB manipulators
+
+	Manipulator fg24bit(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
 		return ECMA48::foreground_24bit(r,g,b);
 	}
 
-	Manipulator bg(size_t i) {
-		assert(i <= 255);
-		return ECMA48::background_256(i);
+	Manipulator bg24bit(size_t r, size_t g, size_t b) {
+		assert(r <= 255);
+		assert(g <= 255);
+		assert(b <= 255);
+		return ECMA48::background_24bit(r,g,b);
+	}
+
+	// ––––––––––––––––––
+	// Auto-selecting RGB
+
+	// RGB manipulators auto-selecting 256 color or 24-bit color base on capabilities
+
+	Manipulator fg(size_t r, size_t g, size_t b) {
+		assert(r <= 255);
+		assert(g <= 255);
+		assert(b <= 255);
+		if (true) // TODO
+			return fg24bit(r,g,b);
+		else
+			return fg256(r,g,b);
 	}
 
 	Manipulator bg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
-		return ECMA48::background_24bit(r,g,b);
+		if (true) // TODO
+			return bg24bit(r,g,b);
+		else
+			return bg256(r,g,b);
 	}
+
 }
 
 #endif
