@@ -749,7 +749,7 @@ namespace dye {
 		public:
 			Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
 			template <typename ObjectType>
-			ObjectManipulator<ObjectType> operator()(const ObjectType& object) {
+			ObjectManipulator<ObjectType> operator()(const ObjectType& object) const {
 				return ObjectManipulator<ObjectType>(_control_sequence, object);
 			}
 			const std::string& control_sequence() const {return _control_sequence; }
