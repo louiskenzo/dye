@@ -665,8 +665,7 @@ namespace dye {
 		// Public interface
 
 		RGB rgb_from_grey_level(size_t l) {
-			assert(l >= GREY_START);
-			assert(l <= GREY_END);
+			assert(l >= 0 && l <= GREY_LEVELS);
 			return RGB(l*GREY_STEP, l*GREY_STEP, l*GREY_STEP);
 		}
 
@@ -678,10 +677,14 @@ namespace dye {
 		}
 
 		size_t ECMA48_from_grey_level(size_t l) {
+			assert(l >= 0 && l <= GREY_LEVELS);
 			return GREY_START + l;
 		}
 
 		size_t ECMA48_from_extended_level(size_t rl, size_t gl, size_t bl) {
+			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
+			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
+			assert(bl >= 0 && bl <= EXTENDED_LEVELS);
 			return EXTENDED_START + rl*36 + gl*6 + bl;
 		}
 
