@@ -700,13 +700,13 @@ namespace dye {
 
 		size_t ECMA48_from_rgb(size_t r, size_t g, size_t b) {
 			const RGB rgb(r,g,b);
-			const size_t qr = _quantize_extended(r * EXTENDED_STEP);
-			const size_t qg = _quantize_extended(g * EXTENDED_STEP);
-			const size_t qb = _quantize_extended(b * EXTENDED_STEP);
-			const RGB qrgb(qr,qg,qb);
+			const size_t qr = _quantize_extended(r);
+			const size_t qg = _quantize_extended(g);
+			const size_t qb = _quantize_extended(b);
+			const RGB qrgb = rgb_from_extended_levels(qr,qg,qb);
 
 			float d_along_xyz = rgb.distance_along_identity_line();
-			size_t closest_grey_level = _quantize(d_along_xyz, GREY_STEP * _UNIT_CUBE_DIAGONAL);
+			size_t closest_grey_level = _quantize(d_along_xyz, GREY_STEP * _RGB_CUBE_DIAGONAL);
 			RGB closest_grey = rgb_from_grey_level(closest_grey_level);
 
 			float d_to_closest_grey = rgb.distance(closest_grey);
