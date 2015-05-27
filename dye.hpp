@@ -529,31 +529,31 @@ namespace dye {
 namespace dye {
 	class RGB {
 		public:
-			float x,y,z;
+			float r,g,b;
 
-			RGB(float x, float y, float z)
-				: x(x), y(y), z(z) {
+			RGB(float r, float g, float b)
+				: r(r), g(g), b(b) {
 				assert(_valid());
 			}
 
 			RGB operator*(float m) {
-				return RGB(x*m, y*m, z*m);
+				return RGB(r*m, g*m, b*m);
 			}
 
 			float norm() const {
-				return std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
+				return std::sqrt(std::pow(r,2) + std::pow(g,2) + std::pow(b,2));
 			}
 
 			float distance(const RGB& other) const {
-				return std::sqrt(std::pow(other.x-x,2)
-					           + std::pow(other.y-y,2)
-					           + std::pow(other.z-z,2));
+				return std::sqrt(std::pow(other.r-r,2)
+					           + std::pow(other.g-g,2)
+					           + std::pow(other.b-b,2));
 			}
 
 			float distance_to_identity_line() const {
-			    // Returns the distance of the 3D point with coordinates (x,y,z) to the x=y=z line.
+			    // Returns the distance of the 3D point with coordinates (r,g,b) to the r=g=b line.
 			    // Simplification of http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-			    return std::sqrt(std::pow(z-y,2) + std::pow(z-x,2) + std::pow(y-x,2))
+			    return std::sqrt(std::pow(b-g,2) + std::pow(b-r,2) + std::pow(g-r,2))
 			         / std::sqrt(3.0f);
 			}
 
@@ -568,9 +568,9 @@ namespace dye {
 
 		private:
 			bool _valid() const {
-				return (x>=0.0f && x<=255.0f) &&
-				       (y>=0.0f && y<=255.0f) &&
-				       (z>=0.0f && z<=255.0f);
+				return (r>=0.0f && r<=255.0f) &&
+				       (g>=0.0f && g<=255.0f) &&
+				       (b>=0.0f && b<=255.0f);
 			}
 	};
 }
