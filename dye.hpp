@@ -8,12 +8,15 @@
 #ifndef DYE_GUARD
 #define DYE_GUARD
 
+// Standard library
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <ostream>
+#include <iostream>
 #include <string>
 #include <sstream>
+// POSIX
+#include <unistd.h>
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 //                                   ECMA-48                                  //
@@ -709,6 +712,11 @@ namespace dye {
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
 namespace dye {
+	bool is_stdout_stderr_tty(const std::ostream& s) {
+		return (s.rdbuf()==std::cout.rdbuf() && isatty(fileno(stdout)))
+		    || (s.rdbuf()==std::cerr.rdbuf() && isatty(fileno(stderr)));
+	}
+
 	template <typename ObjectType>
 	class ObjectManipulator {
 		const std::string _control_sequence;
@@ -722,9 +730,13 @@ namespace dye {
 
 	template <typename ObjectType>
 	std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
-		stream << m.control_sequence()
-		       << m.object()
-		       << ECMA48::default_color << ECMA48::default_background;
+		if (is_stdout_stderr_tty(stream)) {
+			stream << m.control_sequence()
+			       << m.object()
+			       << ECMA48::default_color << ECMA48::default_background;
+		} else {
+			stream << m.object();
+		}
 		return stream;
 	}
 
@@ -740,7 +752,8 @@ namespace dye {
 	};
 
 	std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
-		stream << m.control_sequence();
+		if (is_stdout_stderr_tty(stream))
+			stream << m.control_sequence();
 		return stream;
 	}
 
