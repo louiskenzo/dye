@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -824,13 +825,27 @@ namespace dye {
 	// ––––––––––––––––––
 	// Auto-selecting RGB
 
+	bool terminal_is_24bit_capable() {
+		// libvte based 24-bit terminals
+
+		char const* VTE_VERSION = std::getenv("VTE_VERSION");
+		bool VTE_24 = VTE_VERSION != 0 // VTE_VERSION is defined
+	              && ((VTE_VERSION[0]!=0 && VTE_VERSION[0] >= '4') // Version >= 4
+	               || (VTE_VERSION[0]!=0 && VTE_VERSION[0] == '3'
+	                && VTE_VERSION[1]!=0 && VTE_VERSION[1] >= '6')); // Version >= 3.6
+
+	    return VTE_24;
+	}
+
+	const bool _is_24bit_capable = terminal_is_24bit_capable();
+
 	// RGB manipulators auto-selecting 256 color or 24-bit color base on capabilities
 
 	Manipulator fg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
-		if (true) // TODO
+		if (_is_24bit_capable)
 			return fg24bit(r,g,b);
 		else
 			return fg256(r,g,b);
@@ -840,7 +855,7 @@ namespace dye {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
-		if (true) // TODO
+		if (_is_24bit_capable)
 			return bg24bit(r,g,b);
 		else
 			return bg256(r,g,b);
