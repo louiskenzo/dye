@@ -1,0 +1,4 @@
+#!/bin/bash
+
+printf "\e[8;$(($(./example | wc -l)+2));130t" && ttyrec -e ./example example.tty && ttygif example.tty && convert $(ls *.xwd | tail -n1) example.png && rm *.xwd
+
