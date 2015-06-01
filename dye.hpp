@@ -77,11 +77,12 @@ namespace dye {
 		namespace C1 {
 			// The C1 set of control functions is specified in §5.3, pp. 8-10.
 
-			size_t LENGTH = 2; // Number of bytes in a C1 control function
+			const size_t LENGTH = 2; // Number of bytes in a C1 control function
 
 			// ––––––––––––––––––––––––––––––––––––––––––––––––––
 			// Helper functions for defining C1 control functions
 
+			inline
 			std::string _C1(std::string code) {
 				assert(code.size()==1);
 				return C0::ESC + code;
@@ -310,7 +311,7 @@ namespace dye {
 			// TODO HPB Character Position Backward §8.3.58
 			// TODO VPB Line Position Backward      §8.3.159
 			// TODO RM  Reset Mode                  §8.3.106
-			_Psx SGR("m", 0); // Select Graphic Rendition §8.3.117
+			const _Psx SGR("m", 0); // Select Graphic Rendition §8.3.117
 			// TODO DSR Device Status Report      §8.3.35
 			// TODO DAQ Define Area Qualification §8.3.25
 
@@ -412,8 +413,8 @@ namespace dye {
 		const std::string magenta = ControlSequence::SGR(35);
 		const std::string    cyan = ControlSequence::SGR(36);
 		const std::string   white = ControlSequence::SGR(37);
-		std::string foreground_256(size_t code) { return ControlSequence::SGR(38,5,code); }
-		std::string foreground_24bit(size_t r, size_t g, size_t b) { return ControlSequence::SGR(38,2,r,g,b); }
+		inline std::string foreground_256(size_t code) { return ControlSequence::SGR(38,5,code); }
+		inline std::string foreground_24bit(size_t r, size_t g, size_t b) { return ControlSequence::SGR(38,2,r,g,b); }
 		const std::string default_color = ControlSequence::SGR(39);
 
 		const std::string   black_background = ControlSequence::SGR(40);
@@ -424,8 +425,8 @@ namespace dye {
 		const std::string magenta_background = ControlSequence::SGR(45);
 		const std::string    cyan_background = ControlSequence::SGR(46);
 		const std::string   white_background = ControlSequence::SGR(47);
-		std::string background_256(size_t code) { return ControlSequence::SGR(48,5,code); }
-		std::string background_24bit(size_t r, size_t g, size_t b) { return ControlSequence::SGR(48,2,r,g,b); }
+		inline std::string background_256(size_t code) { return ControlSequence::SGR(48,5,code); }
+		inline std::string background_24bit(size_t r, size_t g, size_t b) { return ControlSequence::SGR(48,2,r,g,b); }
 		const std::string default_background = ControlSequence::SGR(49);
 
 		const std::string                   framed = ControlSequence::SGR(51);
@@ -465,8 +466,9 @@ namespace dye {
 		namespace ControlString {
 			// Control strings are specified in §5.6, p-p. 13
 
-			size_t DELIMITER_LENGTH = C1::LENGTH;
+			const size_t DELIMITER_LENGTH = C1::LENGTH;
 
+			inline
 			bool is_opening_delimiter(const std::string& s) {
 				return s == C1::APC
 				    || s == C1::DCS
@@ -475,12 +477,14 @@ namespace dye {
 				    || s == C1::SOS;
 			}
 
+			inline
 			bool is_command_string_character(const char c) {
 				return (c >= '\x08' && c <= '\x0d')
 				    || (c >= '\x20' && c <= '\x7e');
 			}
 
 
+			inline
 			bool is_command_string(const std::string::const_iterator& begin,
 			                       const std::string::const_iterator& end) {
 				for (std::string::const_iterator c = begin ; c != end ; ++c) {
@@ -490,10 +494,12 @@ namespace dye {
 				return true;
 			}
 
+			inline
 			bool is_command_string(const std::string& s) {
 				return is_command_string(s.begin(), s.end());
 			}
 
+			inline
 			bool is_character_string(const std::string::const_iterator& begin,
 			                         const std::string::const_iterator& end) {
 				static const std::string not_character_string = C1::SOS + C1::ST;
@@ -503,10 +509,12 @@ namespace dye {
 				                          not_character_string.end()) == end;
 			}
 
+			inline
 			bool is_character_string(const std::string& s) {
 				return s.find_first_of(C1::SOS + C1::ST) == std::string::npos;
 			}
 
+			inline
 			bool is_control_string(const std::string& s) {
 				return s.size() >= 2 * C1::LENGTH
 				    && s.substr(0, DELIMITER_LENGTH) == C1::SOS
@@ -517,11 +525,11 @@ namespace dye {
 				                          s.end()   - DELIMITER_LENGTH));
 			}
 
-			std::string APC(const std::string& s) { return C1::APC + s + C1::ST; }
-			std::string DCS(const std::string& s) { return C1::DCS + s + C1::ST; }
-			std::string OSC(const std::string& s) { return C1::OSC + s + C1::ST; }
-			std::string  PM(const std::string& s) { return C1::PM  + s + C1::ST; }
-			std::string SOS(const std::string& s) { return C1::SOS + s + C1::ST; }
+			inline std::string APC(const std::string& s) { return C1::APC + s + C1::ST; }
+			inline std::string DCS(const std::string& s) { return C1::DCS + s + C1::ST; }
+			inline std::string OSC(const std::string& s) { return C1::OSC + s + C1::ST; }
+			inline std::string  PM(const std::string& s) { return C1::PM  + s + C1::ST; }
+			inline std::string SOS(const std::string& s) { return C1::SOS + s + C1::ST; }
 		}
 	}
 }
@@ -578,6 +586,7 @@ namespace dye {
 			}
 	};
 
+	inline
 	std::ostream& operator<<(std::ostream& stream, const RGB& rgb) {
 		stream << "(" << rgb.r << "," << rgb.g << "," << rgb.b << ")";
 		return stream;
@@ -642,19 +651,23 @@ namespace dye {
 		// –––––––––––––––––
 		// Utility functions
 
+		inline
 		int _round(float x) {
 			assert(x >= 0.0f);
 			return std::floor(x + 0.5f);
 		}
 
+		inline
 		size_t _quantize(float x, float step) {
 			return _round(x/step);
 		}
 
+		inline
 		size_t _quantize_extended(float x) {
 			return _quantize(x, EXTENDED_STEP);
 		}
 
+		inline
 		size_t _quantize_grey(float x) {
 			return _quantize(x, GREY_STEP);
 		}
@@ -662,11 +675,13 @@ namespace dye {
 		// ––––––––––––––––
 		// Public interface
 
+		inline
 		RGB rgb_from_grey_level(size_t l) {
 			assert(l >= 0 && l <= GREY_LEVELS);
 			return RGB(l*GREY_STEP, l*GREY_STEP, l*GREY_STEP);
 		}
 
+		inline
 		RGB rgb_from_extended_levels(size_t rl, size_t gl, size_t bl) {
 			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
 			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
@@ -674,11 +689,13 @@ namespace dye {
 			return RGB(rl*EXTENDED_STEP, gl*EXTENDED_STEP, bl*EXTENDED_STEP);
 		}
 
+		inline
 		size_t ECMA48_from_grey_level(size_t l) {
 			assert(l >= 0 && l <= GREY_LEVELS);
 			return GREY_START + l;
 		}
 
+		inline
 		size_t ECMA48_from_extended_level(size_t rl, size_t gl, size_t bl) {
 			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
 			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
@@ -686,6 +703,7 @@ namespace dye {
 			return EXTENDED_START + rl*36 + gl*6 + bl;
 		}
 
+		inline
 		size_t ECMA48_from_rgb(size_t r, size_t g, size_t b) {
 			const RGB rgb(r,g,b);
 			const size_t qr = _quantize_extended(r);
@@ -713,6 +731,7 @@ namespace dye {
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
 namespace dye {
+	inline
 	bool is_stdout_stderr_tty(const std::ostream& s) {
 		return (s.rdbuf()==std::cout.rdbuf() && isatty(fileno(stdout)))
 		    || (s.rdbuf()==std::cerr.rdbuf() && isatty(fileno(stderr)));
@@ -730,6 +749,7 @@ namespace dye {
 	};
 
 	template <typename ObjectType>
+	inline
 	std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
 		if (is_stdout_stderr_tty(stream)) {
 			stream << m.control_sequence()
@@ -752,6 +772,7 @@ namespace dye {
 			const std::string& control_sequence() const {return _control_sequence; }
 	};
 
+	inline
 	std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
 		if (is_stdout_stderr_tty(stream))
 			stream << m.control_sequence();
@@ -781,11 +802,13 @@ namespace dye {
 	// –––––––––––––––––––––––––
 	// xterm256 RGB manipulators
 
+	inline
 	Manipulator fg256(size_t i) {
 		assert(i <= 255);
 		return ECMA48::foreground_256(i);
 	}
 
+	inline
 	Manipulator fg256(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
@@ -793,11 +816,13 @@ namespace dye {
 		return ECMA48::foreground_256(xterm256::ECMA48_from_rgb(r,g,b));
 	}
 
+	inline
 	Manipulator bg256(size_t i) {
 		assert(i <= 255);
 		return ECMA48::background_256(i);
 	}
 
+	inline
 	Manipulator bg256(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
@@ -808,6 +833,7 @@ namespace dye {
 	// –––––––––––––––––––––––
 	// 24-bit RGB manipulators
 
+	inline
 	Manipulator fg24bit(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
@@ -815,6 +841,7 @@ namespace dye {
 		return ECMA48::foreground_24bit(r,g,b);
 	}
 
+	inline
 	Manipulator bg24bit(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
@@ -825,6 +852,7 @@ namespace dye {
 	// ––––––––––––––––––
 	// Auto-selecting RGB
 
+	inline
 	bool terminal_is_24bit_capable() {
 		// libvte based 24-bit terminals
 
@@ -841,6 +869,7 @@ namespace dye {
 
 	// RGB manipulators auto-selecting 256 color or 24-bit color base on capabilities
 
+	inline
 	Manipulator fg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
@@ -851,6 +880,7 @@ namespace dye {
 			return fg256(r,g,b);
 	}
 
+	inline
 	Manipulator bg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
