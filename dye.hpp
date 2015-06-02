@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <sstream>
 // POSIX
@@ -126,157 +127,389 @@ namespace dye {
 		namespace ControlSequence {
 			// Control sequences are specified in §5.4, pp. 10-12
 
-			// –––––––––––––––––––––––––––––––––––––––––––––––
-			// Helper functions for defining control sequences
+			namespace {
+				// –––––––––––––––––––––––––––––––––––––––––––––––
+				// Helper functions for defining control sequences
 
-			inline std::string _to_string(size_t n) {
-				std::ostringstream s; s<<n; return s.str();
-			};
+				inline std::string to_string(size_t n) {
+					std::ostringstream s; s<<n; return s.str();
+				};
 
-			// (Pn) §8.1.d
-			class _Pn {
-				public:
-					_Pn(std::string end_delimiter, size_t default_n)
-						: end_delimiter_(end_delimiter)
-						, default_n_(default_n)
-						{}
+				class numerical_parameter {
+					public:
+						// Constructors
 
-					inline
-					std::string operator()(size_t n) const {
-						return C1::CSI + _to_string(n) + end_delimiter_;
-					}
+						numerical_parameter()
+							: has_default_(false)
+							, default_value_()
+							{}
 
-					inline
-					const std::string& operator()() const {
-						static const std::string default_parameter_result
-						= operator()(default_n_);
-						return default_parameter_result;
-					}
+						numerical_parameter(size_t default_value)
+							: has_default_(true)
+							, default_value_(default_value)
+							{}
 
-				private:
-					std::string  end_delimiter_;
-					const size_t default_n_;
-			};
+						static numerical_parameter no_default() {
+							return numerical_parameter();
+						}
 
-			// (Pn1;Pn2) §8.1.e
-			class _Pn1Pn2 {
-				public:
-					_Pn1Pn2(std::string end_delimiter, size_t default_n1, size_t default_n2)
-						  : end_delimiter_(end_delimiter)
-						  , default_n1_(default_n1)
-						  , default_n2_(default_n2)
-						  {}
+						// Accessors
 
-					inline
-					std::string operator()(size_t n1, size_t n2) const {
-						return C1::CSI
-						     + _to_string(n1) + ";" + _to_string(n2)
-						     + end_delimiter_;
-					}
+						inline bool has_default() const {
+							return has_default_;
+						}
 
-					inline
-					const std::string& operator()() const {
-						static const std::string default_parameter_result
-						= operator()(default_n1_, default_n2_);
-						return default_parameter_result;
-					}
+						inline size_t default_value() const {
+							assert(has_default());
+							return default_value_;
+						}
 
-				private:
-					std::string  end_delimiter_;
-					const size_t default_n1_;
-					const size_t default_n2_;
-			};
+						// Utility functions
 
-			// (Ps...) §8.1.i
-			class _Psx {
-				public:
-					_Psx(std::string end_delimiter, int default_s = -1)
-						: end_delimiter_(end_delimiter)
-						, default_s_(default_s)
-					{
-						assert(default_s >= -1);
-					}
+						inline bool is_default(size_t n) const {
+							return has_default_ && n == default_value_;
+						}
 
-					inline
-					const std::string& operator()() const {
-						static std::string default_parameter_result;
-						if (has_default())
-							default_parameter_result = operator()(default_s_);
-						else
-							default_parameter_result = C1::CSI + end_delimiter_;
-						return default_parameter_result;
-					}
+					private:
+						bool   has_default_;
+						size_t default_value_;
+				};
 
-					inline
-					std::string operator()(size_t s) const {
-						return C1::CSI + _to_string(s)
-						               + end_delimiter_;
-					}
+				typedef numerical_parameter n;
 
-					inline
-					std::string operator()(size_t s1, size_t s2) const {
-						return C1::CSI + _to_string(s1)
-						         + ";" + _to_string(s2)
-						               + end_delimiter_;
-					}
+				class selective_parameter {
+					public:
+						// Constants
 
-					inline
-					std::string operator()(size_t s1, size_t s2, size_t s3) const {
-						return C1::CSI + _to_string(s1)
-						         + ";" + _to_string(s2)
-						         + ";" + _to_string(s3)
-						               + end_delimiter_;
-					}
+						static const size_t NO_MAX = std::numeric_limits<size_t>::max();
 
-					inline
-					std::string operator()(size_t s1, size_t s2, size_t s3, size_t s4) const {
-						return C1::CSI + _to_string(s1)
-						         + ";" + _to_string(s2)
-						         + ";" + _to_string(s3)
-						         + ";" + _to_string(s4)
-						               + end_delimiter_;
-					}
+						// Constuctors
 
-					inline
-					std::string operator()(size_t s1,
-					                       size_t s2,
-					                       size_t s3,
-					                       size_t s4,
-					                       size_t s5) const {
-						return C1::CSI + _to_string(s1)
-						         + ";" + _to_string(s2)
-						         + ";" + _to_string(s3)
-						         + ";" + _to_string(s4)
-						         + ";" + _to_string(s5)
-						               + end_delimiter_;
-					}
+						selective_parameter()
+							: has_default_(false)
+							, default_value_()
+							, max_(NO_MAX)
+							{}
 
-				private:
-					std::string end_delimiter_;
-					const int   default_s_;
+						selective_parameter(size_t default_value,
+						                    size_t max = NO_MAX)
+							: has_default_(true)
+							, default_value_(default_value)
+							, max_(max)
+							{}
 
-					inline bool has_default() const { return default_s_<0; }
-			};
+						static selective_parameter no_default() {
+							return selective_parameter();
+						}
+
+						static selective_parameter no_default(size_t new_max) {
+							return selective_parameter().max(new_max);
+						}
+
+						// Accessors
+
+						inline bool has_default() const {
+							return has_default_;
+						}
+
+						inline size_t default_value() const {
+							assert(has_default());
+							return default_value_;
+						}
+
+						inline size_t max() const {
+							return max_;
+						}
+
+						// Setters
+
+						selective_parameter& max(size_t new_max) {
+							max_ = new_max;
+							return *this;
+						}
+
+						selective_parameter& default_value(size_t new_default_value) {
+							default_value_ = new_default_value;
+							return *this;
+						}
+
+						// Utility functions
+
+						inline bool is_default(size_t value) const {
+							return has_default_ && value == default_value_;
+						}
+
+					private:
+						bool   has_default_;
+						size_t default_value_;
+						size_t max_;
+				};
+
+				typedef selective_parameter s;
+
+				// (Pn) §8.1.d
+				class Pn {
+					public:
+						Pn(const std::string& end_delimiter)
+							: end_delimiter_(end_delimiter)
+							, n_(false)
+							{}
+
+						Pn(const std::string& end_delimiter, size_t default_n)
+							: end_delimiter_(end_delimiter)
+							, n_(default_n)
+							{}
+
+						inline
+						std::string operator()(size_t v) const {
+							if (n_.is_default(v))
+								return C1::CSI + end_delimiter_;
+							else
+								return C1::CSI + to_string(v) + end_delimiter_;
+						}
+
+						inline
+						const std::string& operator()() const {
+							assert(n_.has_default());
+							static const std::string default_parameter_result
+							= operator()(n_.default_value());
+							return default_parameter_result;
+						}
+
+					private:
+						const std::string         end_delimiter_;
+						const numerical_parameter n_;
+				};
+
+				// (Pn1;Pn2) §8.1.e
+				class Pn1Pn2 {
+					public:
+						Pn1Pn2(const std::string& end_delimiter,
+							    size_t default_v1,
+							    size_t default_v2)
+							: end_delimiter_(end_delimiter)
+							, n1_(default_v1)
+							, n2_(default_v2)
+							{}
+
+
+						Pn1Pn2(const std::string& end_delimiter,
+							    const numerical_parameter& n1,
+							    const numerical_parameter& n2)
+							  : end_delimiter_(end_delimiter)
+							  , n1_(n1)
+							  , n2_(n2)
+							  {}
+
+						inline
+						std::string operator()(size_t v1, size_t v2) const {
+							if (n1_.is_default(v1) && n2_.is_default(v2))
+								return C1::CSI + ";" + end_delimiter_;
+							else if (n1_.is_default(v1) && !n2_.is_default(v2))
+								return C1::CSI + ";" + to_string(v2) + end_delimiter_;
+							else if (!n1_.is_default(v1) && n2_.is_default(v2))
+								return C1::CSI + to_string(v1) + ";" + end_delimiter_;
+							else
+								return C1::CSI
+								     + to_string(v1) + ";" + to_string(v2)
+								     + end_delimiter_;
+						}
+
+						inline
+						const std::string& operator()() const {
+							assert(n1_.has_default());
+							assert(n2_.has_default());
+							static const std::string default_parameter_result
+							= operator()(n1_.default_value(), n2_.default_value());
+							return default_parameter_result;
+						}
+
+					private:
+						const std::string end_delimiter_;
+						const numerical_parameter n1_;
+						const numerical_parameter n2_;
+				};
+
+				// (Ps) §8.1.g
+				class Ps {
+					public:
+						Ps(const std::string& end_delimiter,
+						   size_t default_s)
+							: end_delimiter_(end_delimiter)
+							, s_(default_s)
+							{}
+
+						Ps(const std::string& end_delimiter,
+						   size_t default_s,
+						   size_t max_s)
+							: end_delimiter_(end_delimiter)
+							, s_(default_s, max_s)
+							{}
+
+						inline
+						std::string operator()(size_t s) const {
+							assert(s <= s_.max());
+							if (s_.is_default(s))
+								return C1::CSI + end_delimiter_;
+							else
+								return C1::CSI + to_string(s) + end_delimiter_;
+						}
+
+						inline
+						const std::string& operator()() const {
+							assert(s_.has_default());
+							static const std::string default_parameter_result
+							= operator()(s_.default_value());
+							return default_parameter_result;
+						}
+
+					private:
+						const std::string end_delimiter_;
+						const selective_parameter s_;
+				};
+
+				// (Ps1;Ps2) §8.1.h
+				class Ps1Ps2 {
+					public:
+						Ps1Ps2(const std::string& end_delimiter,
+						       const selective_parameter& s1,
+						       const selective_parameter& s2)
+							  : end_delimiter_(end_delimiter)
+							  , s1_(s1)
+							  , s2_(s2)
+							  {}
+
+						inline
+						std::string operator()(size_t v1, size_t v2) const {
+							assert(v1 <= s1_.max());
+							assert(v2 <= s2_.max());
+							if (s1_.is_default(v1) && s2_.is_default(v2))
+								return C1::CSI + ";" + end_delimiter_;
+							else if (s1_.is_default(v1) && !s2_.is_default(v2))
+								return C1::CSI + ";" + to_string(v2) + end_delimiter_;
+							else if (!s1_.is_default(v1) && s2_.is_default(v2))
+								return C1::CSI + to_string(v1) + ";" + end_delimiter_;
+							else
+								return C1::CSI
+								     + to_string(v1) + ";" + to_string(v2)
+								     + end_delimiter_;
+						}
+
+						inline
+						const std::string& operator()() const {
+							assert(s1_.has_default());
+							assert(s2_.has_default());
+							static const std::string default_parameter_result
+							= operator()(s1_.default_value(), s2_.default_value());
+							return default_parameter_result;
+						}
+
+					private:
+						const std::string end_delimiter_;
+						const selective_parameter s1_;
+						const selective_parameter s2_;
+				};
+
+				// (Ps...) §8.1.i
+				class Psx {
+					public:
+						Psx(const std::string& end_delimiter)
+							: end_delimiter_(end_delimiter)
+							, s_()
+							{}
+
+						Psx(const std::string& end_delimiter,
+							 size_t default_s)
+							: end_delimiter_(end_delimiter)
+							, s_(default_s)
+							{}
+
+						Psx(const std::string& end_delimiter,
+							 size_t default_s,
+							 size_t max_s)
+							: end_delimiter_(end_delimiter)
+							, s_(default_s, max_s)
+							{}
+
+						inline
+						const std::string& operator()() const {
+							static std::string default_parameter_result;
+							if (s_.has_default())
+								default_parameter_result = operator()(s_.default_value());
+							else
+								default_parameter_result = C1::CSI + end_delimiter_;
+							return default_parameter_result;
+						}
+
+						inline
+						std::string operator()(size_t s) const {
+							return C1::CSI + to_string(s)
+							               + end_delimiter_;
+						}
+
+						inline
+						std::string operator()(size_t s1, size_t s2) const {
+							return C1::CSI + to_string(s1)
+							         + ";" + to_string(s2)
+							               + end_delimiter_;
+						}
+
+						inline
+						std::string operator()(size_t s1, size_t s2, size_t s3) const {
+							return C1::CSI + to_string(s1)
+							         + ";" + to_string(s2)
+							         + ";" + to_string(s3)
+							               + end_delimiter_;
+						}
+
+						inline
+						std::string operator()(size_t s1, size_t s2, size_t s3, size_t s4) const {
+							return C1::CSI + to_string(s1)
+							         + ";" + to_string(s2)
+							         + ";" + to_string(s3)
+							         + ";" + to_string(s4)
+							               + end_delimiter_;
+						}
+
+						inline
+						std::string operator()(size_t s1,
+						                       size_t s2,
+						                       size_t s3,
+						                       size_t s4,
+						                       size_t s5) const {
+							return C1::CSI + to_string(s1)
+							         + ";" + to_string(s2)
+							         + ";" + to_string(s3)
+							         + ";" + to_string(s4)
+							         + ";" + to_string(s5)
+							               + end_delimiter_;
+						}
+
+					private:
+						const std::string end_delimiter_;
+						const selective_parameter s_;
+				};
+			}
 
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x4·
 
-			const _Pn ICH("@", 1); // Insert Character          §8.3.64
-			const _Pn CUU("A", 1); // Cursor Up                 §8.3.22
-			const _Pn CUD("B", 1); // Cursor Down               §8.3.19
-			const _Pn CUF("C", 1); // Cursor Right              §8.3.20
-			const _Pn CUB("D", 1); // Cursor Left               §8.3.18
-			const _Pn CNL("E", 1); // Cursor Next Line          §8.3.12
-			const _Pn CPL("F", 1); // Cursor Preceding Line     §8.3.13
-			const _Pn CHA("G", 1); // Cursor Character Absolute §8.3.9
-			const _Pn1Pn2 CUP("H", 1, 1); // Cursor Position    §8.3.21
-			const _Pn CHT("I", 1); // Cursor Forward Tabulation §8.3.10
-			const _Pn  ED("J", 0); // Erase in Page             §8.3.39
-			const _Pn  EL("K", 0); // Erase in Line             §8.3.41
-			const _Pn  IL("L", 1); // Insert Line               §8.3.67
-			const _Pn  DL("M", 1); // Delete Line               §8.3.32
-			const _Pn  EF("N", 0); // Erase in Field            §8.3.40
-			const _Pn  EA("O", 0); // Erase in Area             §8.3.37
+			const Pn ICH("@", 1); // Insert Character          §8.3.64
+			const Pn CUU("A", 1); // Cursor Up                 §8.3.22
+			const Pn CUD("B", 1); // Cursor Down               §8.3.19
+			const Pn CUF("C", 1); // Cursor Right              §8.3.20
+			const Pn CUB("D", 1); // Cursor Left               §8.3.18
+			const Pn CNL("E", 1); // Cursor Next Line          §8.3.12
+			const Pn CPL("F", 1); // Cursor Preceding Line     §8.3.13
+			const Pn CHA("G", 1); // Cursor Character Absolute §8.3.9
+			const Pn1Pn2 CUP("H", 1, 1); // Cursor Position    §8.3.21
+			const Pn CHT("I", 1); // Cursor Forward Tabulation §8.3.10
+			const Pn  ED("J", 0); // Erase in Page             §8.3.39
+			const Pn  EL("K", 0); // Erase in Line             §8.3.41
+			const Pn  IL("L", 1); // Insert Line               §8.3.67
+			const Pn  DL("M", 1); // Delete Line               §8.3.32
+			const Pn  EF("N", 0); // Erase in Field            §8.3.40
+			const Pn  EA("O", 0); // Erase in Area             §8.3.37
 
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x5·
@@ -313,7 +546,7 @@ namespace dye {
 			// TODO HPB Character Position Backward §8.3.58
 			// TODO VPB Line Position Backward      §8.3.159
 			// TODO RM  Reset Mode                  §8.3.106
-			const _Psx SGR("m", 0); // Select Graphic Rendition §8.3.117
+			const Psx SGR("m", 0, 65); // Select Graphic Rendition §8.3.117
 			// TODO DSR Device Status Report      §8.3.35
 			// TODO DAQ Define Area Qualification §8.3.25
 
