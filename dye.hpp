@@ -514,21 +514,21 @@ namespace dye {
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x5·
 
-			// TODO DCH  Delete Character                   §8.3.26
-			// TODO SEE  Select Editing Extent              §8.3.115
-			// TODO CPR  Active Position Report             §8.3.14
-			// TODO SU   Scroll Up                          §8.3.147
-			// TODO SD   Scroll Down                        §8.3.113
-			// TODO NP   Next Page                          §8.3.87
-			// TODO PP   Previous Page                      §8.3.95
-			// TODO CTC  Cursor Tabulation Control          §8.3.17
-			// TODO ECH  Erase Character                    §8.3.38
-			// TODO CVT  Cursor Line Tabulation             §8.3.23
-			// TODO CBT  Cursor Backward Tabulation         §8.3.7
-			// TODO SRS  Start Reversed String              §8.3.137
-			// TODO PTX  Parallel Texts                     §8.3.99
-			// TODO SDS  Start Directer String              §8.3.114
-			// TODO SIMD Select Implicit Movement Direction §8.3.120
+			const Pn     DCH("P",  1);    // Delete Character                   §8.3.26
+			const Ps     SEE("Q",  0, 4); // Select Editing Extent              §8.3.115
+			const Pn1Pn2 CPR("R",  1, 1); // Active Position Report             §8.3.14
+			const Pn      SU("S",  1);    // Scroll Up                          §8.3.147
+			const Pn      SD("T",  1);    // Scroll Down                        §8.3.113
+			const Pn      NP("U",  1);    // Next Page                          §8.3.87
+			const Pn      PP("V",  1);    // Previous Page                      §8.3.95
+			const Psx    CTC("W",  0, 6); // Cursor Tabulation Control          §8.3.17
+			const Pn     ECH("X",  1);    // Erase Character                    §8.3.38
+			const Pn     CVT("Y",  1);    // Cursor Line Tabulation             §8.3.23
+			const Pn     CBT("Z",  1);    // Cursor Backward Tabulation         §8.3.7
+			const Ps     SRS("[",  0, 1); // Start Reversed String              §8.3.137
+			const Ps     PTX("\\", 0, 5); // Parallel Texts                     §8.3.99
+			const Ps     SDS("]",  0, 2); // Start Directer String              §8.3.114
+			const Ps    SIMD("^",  0, 1); // Select Implicit Movement Direction §8.3.120
 
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x6·
