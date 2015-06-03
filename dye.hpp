@@ -609,18 +609,18 @@ namespace dye {
 			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with intermediate byte 0x20 and final byte in 0x6·
 
-			// TODO TATE Tabulation Aligned Trailing Edge §8.3.153
-			// TODO TALE Tabulation Aligned Leading Edge  §8.3.152
-			// TODO TAC  Tabulation Aligned Centred       §8.3.151
-			// TODO TCC  Tabulation Centred on Character  §8.3.155
-			// TODO TSR  Tabulation Stop Remove           §8.3.156
-			// TODO SCO  Set Character Orientation        §8.3.110
-			// TODO SRCS Set Reduced Character Separation §8.3.136
-			// TODO SCS  Set Character Spacing            §8.3.112
-			// TODO SLS  Set Line Spacing                 §8.3.124
-			// TODO SPH  Set Page Home                    §8.3.131
-			// TODO SPL  Set Page Limit                   §8.3.133
-			// TODO SCP  Select Character Path            §8.3.111
+			const Pn    TATE("`");             // Tabulation Aligned Trailing Edge  §8.3.153
+			const Pn    TALE("a");             // Tabulation Aligned Leading Edge   §8.3.152
+			const Pn     TAC("b");             // Tabulation Aligned Centred        §8.3.151
+			const Pn1Pn2 TCC("c", n(), n(32)); // Tabulation Centred on Character   §8.3.155
+			const Pn     TSR("d");             // Tabulation Stop Remove            §8.3.156
+			const Ps     SCO("e", 0, 7);       // Set Character Orientation         §8.3.110
+			const Pn    SRCS("f", 0);          // Set Reduced Character Separation  §8.3.136
+			const Pn     SCS("g");             // Set Character Spacing             §8.3.112
+			const Pn     SLS("h");             // Set Line Spacing                  §8.3.124
+			const Pn     SPH("i");             // Set Page Home                     §8.3.131
+			const Pn     SPL("j");             // Set Page Limit                    §8.3.133
+			const Ps1Ps2 SCP("k", s().max(2), s().max(2)); // Select Character Path §8.3.111
 
 		}
 
