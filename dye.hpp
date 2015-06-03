@@ -334,6 +334,12 @@ namespace dye {
 				class Ps {
 					public:
 						Ps(const std::string& end_delimiter,
+						   const selective_parameter& s)
+							: end_delimiter_(end_delimiter)
+							, s_(s)
+							{}
+
+						Ps(const std::string& end_delimiter,
 						   size_t default_s)
 							: end_delimiter_(end_delimiter)
 							, s_(default_s)
@@ -533,22 +539,22 @@ namespace dye {
 			// –––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with final byte in 0x6·
 
-			// TODO HPA Character Position Absolute §8.3.57
-			// TODO HPR Character Position Forward  §8.3.59
-			// TODO REP Repeat                      §8.3.103
-			// TODO DA  Device Attributes           §8.3.24
-			// TODO VPA Line Position Absolute      §8.3.158
-			// TODO VPR Line Position Forward       §8.3.160
-			// TODO HVP Character and Line Position §8.3.63
-			// TODO TBC Tabulation Clear            §8.3.154
-			// TODO SM  Set Mode                    §8.3.125
-			// TODO MC  Media Copy                  §8.3.82
-			// TODO HPB Character Position Backward §8.3.58
-			// TODO VPB Line Position Backward      §8.3.159
-			// TODO RM  Reset Mode                  §8.3.106
-			const Psx SGR("m", 0, 65); // Select Graphic Rendition §8.3.117
-			// TODO DSR Device Status Report      §8.3.35
-			// TODO DAQ Define Area Qualification §8.3.25
+			const Pn     HPA("`", 1);    // Character Position Absolute §8.3.57
+			const Pn     HPR("a", 1);    // Character Position Forward  §8.3.59
+			const Pn     REP("b", 1);    // Repeat                      §8.3.103
+			const Ps      DA("c", 0);    // Device Attributes           §8.3.24
+			const Pn     VPA("d", 1);    // Line Position Absolute      §8.3.158
+			const Pn     VPR("e", 1);    // Line Position Forward       §8.3.160
+			const Pn1Pn2 HVP("f", 1, 1); // Character and Line Position §8.3.63
+			const Ps     TBC("g", 0, 5); // Tabulation Clear            §8.3.154
+			const Ps      SM("h", s().max(22)); // Set Mode             §8.3.125
+			const Ps      MC("i", 0, 7); // Media Copy                  §8.3.82
+			const Pn     HPB("j", 1);    // Character Position Backward §8.3.58
+			const Pn     VPB("k", 1);    // Line Position Backward      §8.3.159
+			const Ps      RM("l", s().max(22)); // Reset Mode           §8.3.106
+			const Psx    SGR("m", 0, 65); // Select Graphic Rendition   §8.3.117
+			const Ps     DSR("n", 0, 6);  // Device Status Report       §8.3.35
+			const Ps     DAQ("o", 0, 11); // Define Area Qualification  §8.3.25
 
 			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with intermediate byte 0x20 and final byte in 0x4·
