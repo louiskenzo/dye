@@ -284,6 +284,12 @@ namespace dye {
 				// (Pn1;Pn2) §8.1.e
 				class Pn1Pn2 {
 					public:
+						Pn1Pn2(const std::string& end_delimiter)
+							: end_delimiter_(end_delimiter)
+							, n1_()
+							, n2_()
+							{}
+
 						Pn1Pn2(const std::string& end_delimiter,
 							    size_t default_v1,
 							    size_t default_v2)
@@ -333,6 +339,11 @@ namespace dye {
 				// (Ps) §8.1.g
 				class Ps {
 					public:
+						Ps(const std::string& end_delimiter)
+							: end_delimiter_(end_delimiter)
+							, s_()
+							{}
+
 						Ps(const std::string& end_delimiter,
 						   const selective_parameter& s)
 							: end_delimiter_(end_delimiter)
@@ -559,21 +570,21 @@ namespace dye {
 			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with intermediate byte 0x20 and final byte in 0x4·
 
-			// TODO SL   Scroll Left                    §8.3.121
-			// TODO SR   Scroll Right                   §8.3.135
-			// TODO GSM  Graphic Size Modification      §8.3.55
-			// TODO GSS  Graphic Size Selection         §8.3.56
-			// TODO FNT  Font Selection                 §8.3.53
-			// TODO TSS  Thin Space Specification       §8.3.157
-			// TODO JFY  Justify                        §8.3.73
-			// TODO SPI  Spacing Increment              §8.3.132
-			// TODO QUAD Quad                           §8.3.102
-			// TODO SSU  Select Size Unit               §8.3.139
-			// TODO PFS  Page Format Selection          §8.3.91
-			// TODO SHS  Select Character Spacing       §8.3.118
-			// TODO SVS  Select Line Spacing            §8.3.149
-			// TODO IGS  Identify Graphic Subrepertoire §8.3.66
-			// TODO IDCS Identify Device Control String §8.3.65
+			const Pn      SL(" @", 1);     // Scroll Left                    §8.3.121
+			const Pn      SR(" A", 1);     // Scroll Right                   §8.3.135
+			const Pn1Pn2 GSM(" B", 100, 100); // Graphic Size Modification   §8.3.55
+			const Pn     GSS(" C");        // Graphic Size Selection         §8.3.56
+			const Ps1Ps2 FNT(" D", s(0).max(9), s(0)); // Font Selection     §8.3.53
+			const Pn     TSS(" E");        // Thin Space Specification       §8.3.157
+			const Psx    JFY(" F", 0, 8);  // Justify                        §8.3.73
+			const Pn1Pn2 SPI(" G");        // Spacing Increment              §8.3.132
+			const Psx   QUAD(" H", 0, 6);  // Quad                           §8.3.102
+			const Ps     SSU(" I", 0, 8);  // Select Size Unit               §8.3.139
+			const Ps     PFS(" J", 0, 15); // Page Format Selection          §8.3.91
+			const Ps     SHS(" K", 0, 6);  // Select Character Spacing       §8.3.118
+			const Ps     SVS(" L", 0, 9);  // Select Line Spacing            §8.3.149
+			const Ps     IGS(" M");        // Identify Graphic Subrepertoire §8.3.66
+			const Ps    IDCS(" O", s().max(2));// Identify Device Control String §8.3.65
 
 			// ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 			// Control sequences with intermediate byte 0x20 and final byte in 0x5·
