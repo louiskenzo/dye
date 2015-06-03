@@ -592,13 +592,13 @@ namespace dye {
 			const Pn     PPA(" P", 1);     // Page Position Absolute                   §8.3.96
 			const Pn     PPR(" Q", 1);     // Page Position Forward                    §8.3.98
 			const Pn     PPB(" R", 1);     // Page Position Backward                   §8.3.97
-			const Ps1Ps2 SPD(" S", s(0).max(7), s(0).max(3)); // Select Presentation Directions §8.3.126
+			const Ps1Ps2 SPD(" S", s(0,7), s(0,3)); // Select Presentation Directions  §8.3.126
 			const Pn1Pn2 DTA(" T");        // Dimension Text Area                      §8.3.36
 			const Pn     SLH(" U");        // Set Line Home                            §8.3.122
 			const Pn     SLL(" V");        // Set Line Limit                           §8.3.123
 			const Pn     FNK(" W");        // Function Key                             §8.3.52
 			const Ps    SPQR(" X", 0, 2);  // Select Print Quality and Rapidity        §8.3.134
-			const Ps1Ps2 SEF(" Y", s(0).max(2), s(0).max(2)); // Sheet Eject and Feed  §8.3.116
+			const Ps1Ps2 SEF(" Y", s(0,2), s(0,2)); // Sheet Eject and Feed            §8.3.116
 			const Ps     PEC(" Z", 0, 2);  // Presentation Expand or Contract          §8.3.90
 			const Pn     SSW(" [");        // Select Space Width                       §8.3.140
 			const Pn    SACS(" \\", 0);    // Set Additional Character Separation      §8.3.107
