@@ -21,11 +21,11 @@ int main() {
 	          << dye::cyan("cyan")       << " "
 	          << dye::white("white")     << "\n\n";
 
-	// –––––––––––––––
-	// xterm256 colors
+	// –––––––––––––––––––––––
+	// xterm256 indexed colors
 
-	std::cout << "–––––––––\n"
-	             "xterm-256\n\n";
+	std::cout << "––––––––––––––––––––––––\n"
+	             "xterm-256 indexed colors\n\n";
 
 	// Standard colors
 
@@ -85,20 +85,11 @@ int main() {
 
 	std::cout << "\n\n";
 
-	// –––––––––––––
-	// 24-bit colors
+	// ––––––––––––––––––
+	// RGB-triplet colors
 
-	std::cout << "–––––––––––––––––––––\n"
-	             "24-bit (if available)\n\n";
-
-	for (size_t r=0; r<256; r+=15) {
-		for (size_t g=0; g<256; g+=24)
-			for (size_t b=0; b<256; b+=24)
-				std::cout << dye::bg256(r,g,b)(" ");
-		std::cout << "\n";
-	}
-
-	std::cout << "\n";
+	std::cout << "–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––\n"
+	             "RGB-triplets (24-bit if available, xterm256 approximation fallback)\n\n";
 
 	for (size_t r=0; r<256; r+=15) {
 		for (size_t g=0; g<256; g+=24)
