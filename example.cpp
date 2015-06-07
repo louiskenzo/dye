@@ -19,11 +19,12 @@ int main() {
 	          << dye::blue("blue")       << " "
 	          << dye::magenta("magenta") << " "
 	          << dye::cyan("cyan")       << " "
-	          << dye::white("white")     << "\n\n";
+	          << dye::white("white")     << std::endl;
 
 	// –––––––––––––––––––––––
 	// xterm256 indexed colors
 
+	std::cout << std::endl;
 	std::cout << "––––––––––––––––––––––––\n"
 	             "xterm-256 indexed colors\n\n";
 
@@ -83,11 +84,12 @@ int main() {
 	for (size_t i=dye::xterm256::GREY_START; i<=dye::xterm256::GREY_END; ++i)
 		std::cout << std::setw(4) << i;
 
-	std::cout << "\n\n";
+	std::cout << std::endl;
 
 	// ––––––––––––––––––
 	// RGB-triplet colors
 
+	std::cout << std::endl;
 	std::cout << "–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––\n"
 	             "RGB-triplets (24-bit if available, xterm256 approximation fallback)\n\n";
 
@@ -95,9 +97,39 @@ int main() {
 		for (size_t g=0; g<256; g+=24)
 			for (size_t b=0; b<256; b+=24)
 				std::cout << dye::bg(r,g,b)(" ");
-		std::cout << "\n";
+		std::cout << std::endl;
 	}
 
+	// ––––––––––
+	// Color maps
+
+	std::cout << std::endl;
+	std::cout << "––––––––––\n"
+	             "Color maps\n\n";
+
+	std::cout << std::setw(5) << "Hot" << ": ";
+	for (size_t i=0; i<100; ++i)
+		std::cout << dye::hot.bg(i)(" ");
+	std::cout << std::endl;
+
+	std::cout << std::setw(5) << "Jet" << ": ";
+	for (size_t i=0; i<100; ++i)
+		std::cout << dye::jet.bg(i)(" ");
+	std::cout << std::endl;
+
+	std::cout << std::setw(5) << "HSV" << ": ";
+	for (size_t i=0; i<100; ++i)
+		std::cout << dye::hsv.bg(i)(" ");
+	std::cout << std::endl;
+
+	std::cout << std::setw(5) << "Good" << ": ";
+	for (size_t i=0; i<100; ++i)
+		std::cout << dye::good.bg(i)(" ");
+	std::cout << std::endl;
+
+	std::cout << std::setw(5) << "Gray" << ": ";
+	for (size_t i=0; i<100; ++i)
+		std::cout << dye::gray.bg(i)(" ");
 	std::cout << std::endl;
 }
 

@@ -795,11 +795,11 @@ namespace dye {
 	}
 }
 
-// ·········································································· //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 //                                  RGB model                                 //
-// ·········································································· //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
-namespace {
+namespace dye {
 	class RGB {
 		public:
 			float r,g,b;
@@ -993,47 +993,50 @@ namespace dye {
 			return (s.rdbuf()==std::cout.rdbuf() && isatty(fileno(stdout)))
 			    || (s.rdbuf()==std::cerr.rdbuf() && isatty(fileno(stderr)));
 		}
+	}
 
-		template <typename ObjectType>
-		class ObjectManipulator {
-			const std::string _control_sequence;
-			const ObjectType& _object;
-			public:
-				ObjectManipulator(const std::string& control_sequence, const ObjectType& object)
-					: _control_sequence(control_sequence), _object(object) {}
-				const std::string& control_sequence() const {return _control_sequence;}
-				const ObjectType& object() const {return _object; }
-		};
+	// ––––––––––––––––––––––––
+	// Public manipulator tools
 
-		template <typename ObjectType>
-		inline
-		std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
-			if (is_stdout_stderr_tty(stream)) {
-				stream << m.control_sequence()
-				       << m.object()
-				       << ECMA48::default_color << ECMA48::default_background;
-			} else {
-				stream << m.object();
+	template <typename ObjectType>
+	class ObjectManipulator {
+		const std::string _control_sequence;
+		const ObjectType& _object;
+		public:
+			ObjectManipulator(const std::string& control_sequence, const ObjectType& object)
+				: _control_sequence(control_sequence), _object(object) {}
+			const std::string& control_sequence() const {return _control_sequence;}
+			const ObjectType& object() const {return _object; }
+	};
+
+	template <typename ObjectType>
+	inline
+	std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
+		if (is_stdout_stderr_tty(stream)) {
+			stream << m.control_sequence()
+			       << m.object()
+			       << ECMA48::default_color << ECMA48::default_background;
+		} else {
+			stream << m.object();
+		}
+		return stream;
+	}
+
+	class Manipulator {
+		const std::string _control_sequence;
+		public:
+			Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
+			template <typename ObjectType>
+			ObjectManipulator<ObjectType> operator()(const ObjectType& object) const {
+				return ObjectManipulator<ObjectType>(_control_sequence, object);
 			}
-			return stream;
-		}
+			const std::string& control_sequence() const {return _control_sequence; }
+	};
 
-		class Manipulator {
-			const std::string _control_sequence;
-			public:
-				Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
-				template <typename ObjectType>
-				ObjectManipulator<ObjectType> operator()(const ObjectType& object) const {
-					return ObjectManipulator<ObjectType>(_control_sequence, object);
-				}
-				const std::string& control_sequence() const {return _control_sequence; }
-		};
-
-		inline std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
-			if (is_stdout_stderr_tty(stream))
-				stream << m.control_sequence();
-			return stream;
-		}
+	inline std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
+		if (is_stdout_stderr_tty(stream))
+			stream << m.control_sequence();
+		return stream;
 	}
 
 	// ––––––––––––––––––––
@@ -1145,6 +1148,228 @@ namespace dye {
 	}
 
 	inline Manipulator bg(const RGB& rgb) { return bg(rgb.r, rgb.g, rgb.b); }
+}
+
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                                 Color maps                                 //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	// ·································
+	// Utilities functions for colormaps
+
+	namespace {
+		inline float upramp(float x, float center, float width) {
+		    return 255.0f * (1.0f + std::tanh(6.0f / width * (x - center))) / 2.0f;
+		}
+
+		inline float downramp(float x, float center, float width) {
+		    return 255.0f * (1.0f - std::tanh(6.0f / width * (x - center))) / 2.0f;
+		}
+	}
+
+	// ·············
+	// Colormap data
+
+	namespace {
+		inline RGB hot_function(float x) {
+			return RGB(upramp(x, 1/6.0, 1/3.0),
+			           upramp(x, 1/2.0, 1/3.0),
+			           upramp(x, 5/6.0, 1/3.0));
+		}
+
+	    inline RGB jet_function(float x) {
+	        if (x <= 0.5)
+	            return RGB(upramp(x, 5/8.0, 1/4.0),
+	                       upramp(x, 1/8.0, 1/4.0),
+	                     downramp(x, 3/8.0, 1/4.0));
+	        else
+	            return RGB(upramp(x, 5/8.0, 1/4.0),
+	                     downramp(x, 7/8.0, 1/4.0),
+	                     downramp(x, 3/8.0, 1/4.0));
+	    }
+
+	    inline RGB hsv_function(float x) {
+	        if (x<=1/3.0)
+	            return RGB(downramp(x, 3/12.0, 1/6.0),
+	                         upramp(x, 1/12.0, 1/6.0),
+	                       0.0);
+	        else if (x<=2/3.0)
+	            return RGB(0.0,
+	                       downramp(x, 7/12.0, 1/6.0),
+	                         upramp(x, 5/12.0, 1/6.0));
+	        else
+	            return RGB(upramp(x, 9/12.0, 1/6.0),
+	                       0.0,
+	                       downramp(x, 11/12.0, 1/6.0));
+	    }
+
+	    inline RGB good_function(float x) {
+	        return RGB(downramp(x, 8/12.0, 2/3.0),
+	                     upramp(x, 4/12.0, 2/3.0),
+	                   0.0);
+	    }
+
+	    inline RGB gray_function(float x) {
+	        return RGB(upramp(x, 1/2.0, 1.0),
+	                   upramp(x, 1/2.0, 1.0),
+	                   upramp(x, 1/2.0, 1.0));
+	    }
+	}
+
+	// –––––––––––––––––––––
+	// Colormap public tools
+
+	typedef RGB (*ColormapFunction)(float);
+
+	class Colormap {
+		private:
+			inline float normalize(float x) const {
+				if (x < 0.0f) x = 0.0f;
+				if (x > 1.0f) x = 1.0f;
+				return x;
+			}
+
+		public:
+			Colormap(ColormapFunction f) : f_(f) {}
+
+			// fg
+
+			inline Manipulator fg(float x) const {
+				return dye::fg(f_(normalize(x)));
+			}
+
+			inline Manipulator fg(size_t percentage) const {
+				return fg(percentage / 100.0f);
+			}
+
+			inline Manipulator fg(int percentage) const {
+				return fg(percentage / 100.0f);
+			}
+
+			// bg
+
+			inline Manipulator bg(float x) const {
+				return dye::bg(f_(normalize(x)));
+			}
+
+			inline Manipulator bg(size_t percentage) const {
+				return bg(percentage / 100.0f);
+			}
+
+			inline Manipulator bg(int percentage) const {
+				return bg(percentage / 100.0f);
+			}
+
+			// operator()
+
+			Manipulator operator()(float x) const {
+				return fg(x);
+			}
+
+			Manipulator operator()(size_t percentage) const {
+				return fg(percentage);
+			}
+
+			Manipulator operator()(int percentage) const {
+				return fg(percentage);
+			}
+
+		private:
+			ColormapFunction f_;
+	};
+
+	template <size_t SIZE>
+	class ColormapLUT {
+		private:
+			inline size_t index(float x) const {
+				if (x < 0.0f) return 0;
+				if (x > 1.0f) return SIZE-1;
+				return x*(SIZE-1);
+			}
+
+			void computeLUT_(const Colormap& c) {
+				fg_lut_.clear();
+				bg_lut_.clear();
+				fg_lut_.reserve(SIZE);
+				bg_lut_.reserve(SIZE);
+
+				for (size_t i=0; i<SIZE; ++i) {
+					fg_lut_.push_back(c.fg(i / float(SIZE-1)));
+					bg_lut_.push_back(c.bg(i / float(SIZE-1)));
+				}
+			}
+
+		public:
+			ColormapLUT(ColormapFunction f) {
+				computeLUT_(Colormap(f));
+			}
+
+			ColormapLUT(const Colormap& c) {
+				computeLUT_(c);
+			}
+
+			// fg
+
+			inline Manipulator fg(float x) const {
+				return fg_lut_[index(x)];
+			}
+
+			inline Manipulator fg(size_t percentage) const {
+				return fg(percentage / 100.0f);
+			}
+
+			inline Manipulator fg(int percentage) const {
+				return fg(percentage / 100.0f);
+			}
+
+			// bg
+
+			inline Manipulator bg(float x) const {
+				return bg_lut_[index(x)];
+			}
+
+			inline Manipulator bg(size_t percentage) const {
+				return bg(percentage / 100.0f);
+			}
+
+			inline Manipulator bg(int percentage) const {
+				return bg(percentage / 100.0f);
+			}
+
+			// operator()
+
+			Manipulator operator()(float x) const {
+				return fg(x);
+			}
+
+			Manipulator operator()(size_t percentage) const {
+				return fg(percentage);
+			}
+
+			Manipulator operator()(int percentage) const {
+				return fg(percentage);
+			}
+
+		private:
+			std::vector<Manipulator> fg_lut_;
+			std::vector<Manipulator> bg_lut_;
+	};
+
+	// –––––––––
+	// Colormaps
+
+	Colormap  hot(hot_function);
+	Colormap  jet(jet_function);
+	Colormap  hsv(hsv_function);
+	Colormap good(good_function);
+	Colormap gray(gray_function);
+
+	ColormapLUT<100>  hot100(hot);
+	ColormapLUT<100>  jet100(jet);
+	ColormapLUT<100>  hsv100(hsv);
+	ColormapLUT<100> good100(good);
+	ColormapLUT<100> gray100(gray);
 }
 
 #endif
