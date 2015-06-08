@@ -20,21 +20,17 @@
 // POSIX
 #include <unistd.h>
 
+// The ECMA48 standard is available in PDF form at:
+// http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-048.pdf
+// Control functions are specified in §5. Their meaning and representation are
+// described in §8.3, pp. 33-74.
+
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
-//                                   ECMA-48                                  //
+//                                 ECMA-48 C0                                 //
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
 namespace dye {
 	namespace ECMA48 {
-		// The ECMA48 standard is available in PDF form at:
-		// http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-048.pdf
-
-		// –––––––––––––––––
-		// Control functions
-
-		// Control functions are specified in §5. Their meaning and representation are
-		// described in §8.3, pp. 33-74.
-
 		namespace C0 {
 			// The C0 set of control functions is specified in §5.2, p. 8.
 
@@ -74,18 +70,23 @@ namespace dye {
 			const std::string IS2 = "\x1e"; // Information Separator Three §8.3.71
 			const std::string IS1 = "\x1f"; // Information Separator Four  §8.3.72
 		}
+	}
+}
 
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                                 ECMA-48 C1                                 //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	namespace ECMA48 {
 		namespace C1 {
 			// The C1 set of control functions is specified in §5.3, pp. 8-10.
 
-			const size_t LENGTH = 2; // Number of bytes in a C1 control function
+			// ·················
+			// Utility functions
 
 			namespace {
-				// ––––––––––––––––––––––––––––––––––––––––––––––––––
-				// Helper functions for defining C1 control functions
-
-				inline
-				std::string C1(std::string code) {
+				inline std::string C1(std::string code) {
 					assert(code.size()==1);
 					return C0::ESC + code;
 				}
@@ -93,6 +94,8 @@ namespace dye {
 
 			// –––––––––––––––––––––––––––––––
 			// C1 control function definitions
+
+			const size_t LENGTH = 2; // Number of bytes in a C1 control function
 
 			const std::string APC = C1("_");  // Application Program Command §8.3.2
 			const std::string BPH = C1("2");  // Break Permitted Here        §8.3.4
@@ -123,14 +126,22 @@ namespace dye {
 			const std::string STS = C1("S");  // Set Transmit State          §8.3.145
 			const std::string VTS = C1("J");  // Line Tabulation Set         §8.3.162
 		}
+	}
+}
 
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                          ECMA-48 Control Sequences                         //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	namespace ECMA48 {
 		namespace ControlSequence {
 			// Control sequences are specified in §5.4, pp. 10-12
 
-			namespace {
-				// –––––––––––––––––––––––––––––––––––––––––––––––
-				// Helper functions for defining control sequences
+			// ···························································
+			// Helper classes and functions for defining control sequences
 
+			namespace {
 				inline std::string to_string(size_t n) {
 					std::ostringstream s; s<<n; return s.str();
 				};
@@ -260,16 +271,14 @@ namespace dye {
 							, n_(default_n)
 							{}
 
-						inline
-						std::string operator()(size_t v) const {
+						inline std::string operator()(size_t v) const {
 							if (n_.is_default(v))
 								return C1::CSI + end_delimiter_;
 							else
 								return C1::CSI + to_string(v) + end_delimiter_;
 						}
 
-						inline
-						const std::string& operator()() const {
+						inline const std::string& operator()() const {
 							assert(n_.has_default());
 							static const std::string default_parameter_result
 							= operator()(n_.default_value());
@@ -277,7 +286,7 @@ namespace dye {
 						}
 
 					private:
-						const std::string         end_delimiter_;
+						const std::string end_delimiter_;
 						const numerical_parameter n_;
 				};
 
@@ -307,8 +316,7 @@ namespace dye {
 							  , n2_(n2)
 							  {}
 
-						inline
-						std::string operator()(size_t v1, size_t v2) const {
+						inline std::string operator()(size_t v1, size_t v2) const {
 							if (n1_.is_default(v1) && n2_.is_default(v2))
 								return C1::CSI + ";" + end_delimiter_;
 							else if (n1_.is_default(v1) && !n2_.is_default(v2))
@@ -321,8 +329,7 @@ namespace dye {
 								     + end_delimiter_;
 						}
 
-						inline
-						const std::string& operator()() const {
+						inline const std::string& operator()() const {
 							assert(n1_.has_default());
 							assert(n2_.has_default());
 							static const std::string default_parameter_result
@@ -363,8 +370,7 @@ namespace dye {
 							, s_(default_s, max_s)
 							{}
 
-						inline
-						std::string operator()(size_t s) const {
+						inline std::string operator()(size_t s) const {
 							assert(s <= s_.max());
 							if (s_.is_default(s))
 								return C1::CSI + end_delimiter_;
@@ -372,8 +378,7 @@ namespace dye {
 								return C1::CSI + to_string(s) + end_delimiter_;
 						}
 
-						inline
-						const std::string& operator()() const {
+						inline const std::string& operator()() const {
 							assert(s_.has_default());
 							static const std::string default_parameter_result
 							= operator()(s_.default_value());
@@ -396,8 +401,7 @@ namespace dye {
 							  , s2_(s2)
 							  {}
 
-						inline
-						std::string operator()(size_t v1, size_t v2) const {
+						inline std::string operator()(size_t v1, size_t v2) const {
 							assert(v1 <= s1_.max());
 							assert(v2 <= s2_.max());
 							if (s1_.is_default(v1) && s2_.is_default(v2))
@@ -412,8 +416,7 @@ namespace dye {
 								     + end_delimiter_;
 						}
 
-						inline
-						const std::string& operator()() const {
+						inline const std::string& operator()() const {
 							assert(s1_.has_default());
 							assert(s2_.has_default());
 							static const std::string default_parameter_result
@@ -448,8 +451,7 @@ namespace dye {
 							, s_(default_s, max_s)
 							{}
 
-						inline
-						const std::string& operator()() const {
+						inline const std::string& operator()() const {
 							static std::string default_parameter_result;
 							if (s_.has_default())
 								default_parameter_result = operator()(s_.default_value());
@@ -458,29 +460,25 @@ namespace dye {
 							return default_parameter_result;
 						}
 
-						inline
-						std::string operator()(size_t s) const {
+						inline std::string operator()(size_t s) const {
 							return C1::CSI + to_string(s)
 							               + end_delimiter_;
 						}
 
-						inline
-						std::string operator()(size_t s1, size_t s2) const {
+						inline std::string operator()(size_t s1, size_t s2) const {
 							return C1::CSI + to_string(s1)
 							         + ";" + to_string(s2)
 							               + end_delimiter_;
 						}
 
-						inline
-						std::string operator()(size_t s1, size_t s2, size_t s3) const {
+						inline std::string operator()(size_t s1, size_t s2, size_t s3) const {
 							return C1::CSI + to_string(s1)
 							         + ";" + to_string(s2)
 							         + ";" + to_string(s3)
 							               + end_delimiter_;
 						}
 
-						inline
-						std::string operator()(size_t s1, size_t s2, size_t s3, size_t s4) const {
+						inline std::string operator()(size_t s1, size_t s2, size_t s3, size_t s4) const {
 							return C1::CSI + to_string(s1)
 							         + ";" + to_string(s2)
 							         + ";" + to_string(s3)
@@ -699,7 +697,15 @@ namespace dye {
 		const std::string         left_side_line = ideogram_overline;
 		const std::string  double_left_side_line = ideogram_double_overline;
 		const std::string          not_side_line = not_ideogram;
+	}
+}
 
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                    ECMA-48 Independent Control Functions                   //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	namespace ECMA48 {
 		namespace IndependentControlFunctions {
 			// The control sequences set of control functions is specified in §5.5, pp. 12-13
 
@@ -714,14 +720,21 @@ namespace dye {
 			const std::string LS2R = C0::ESC + "}"; // Locking-Shift Two Right   §8.3.79
 			const std::string LS1R = C0::ESC + "~"; // Locking-Shift One Right   §8.3.77
 		}
+	}
+}
 
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+//                           ECMA-48 Control Strings                          //
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+
+namespace dye {
+	namespace ECMA48 {
 		namespace ControlString {
 			// Control strings are specified in §5.6, p-p. 13
 
 			const size_t DELIMITER_LENGTH = C1::LENGTH;
 
-			inline
-			bool is_opening_delimiter(const std::string& s) {
+			inline bool is_opening_delimiter(const std::string& s) {
 				return s == C1::APC
 				    || s == C1::DCS
 				    || s == C1::OSC
@@ -729,8 +742,7 @@ namespace dye {
 				    || s == C1::SOS;
 			}
 
-			inline
-			bool is_command_string_character(const char c) {
+			inline bool is_command_string_character(const char c) {
 				return (c >= '\x08' && c <= '\x0d')
 				    || (c >= '\x20' && c <= '\x7e');
 			}
@@ -746,8 +758,7 @@ namespace dye {
 				return true;
 			}
 
-			inline
-			bool is_command_string(const std::string& s) {
+			inline bool is_command_string(const std::string& s) {
 				return is_command_string(s.begin(), s.end());
 			}
 
@@ -761,13 +772,11 @@ namespace dye {
 				                          not_character_string.end()) == end;
 			}
 
-			inline
-			bool is_character_string(const std::string& s) {
+			inline bool is_character_string(const std::string& s) {
 				return s.find_first_of(C1::SOS + C1::ST) == std::string::npos;
 			}
 
-			inline
-			bool is_control_string(const std::string& s) {
+			inline bool is_control_string(const std::string& s) {
 				return s.size() >= 2 * C1::LENGTH
 				    && s.substr(0, DELIMITER_LENGTH) == C1::SOS
 				    && s.substr(s.size() - DELIMITER_LENGTH, DELIMITER_LENGTH) == C1::ST
@@ -786,11 +795,11 @@ namespace dye {
 	}
 }
 
-// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+// ·········································································· //
 //                                  RGB model                                 //
-// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
+// ·········································································· //
 
-namespace dye {
+namespace {
 	class RGB {
 		public:
 			float r,g,b;
@@ -894,36 +903,30 @@ namespace dye {
 
 		const float  RGB_EXTENT = 255.0f;
 
-		namespace {
-			const float _UNIT_CUBE_DIAGONAL = std::sqrt(3.0f);
-			const float  _RGB_CUBE_DIAGONAL = RGB_EXTENT * _UNIT_CUBE_DIAGONAL;
-		}
-
 		const float EXTENDED_STEP = RGB_EXTENT / (EXTENDED_LEVELS - 1);
 		const float     GREY_STEP = RGB_EXTENT /     (GREY_LEVELS - 1);
 
-		namespace {
-			// –––––––––––––––––
-			// Utility functions
+		// ·················
+		// Utility functions
 
-			inline
-			int round(float x) {
+		namespace {
+			const float _UNIT_CUBE_DIAGONAL = std::sqrt(3.0f);
+			const float  _RGB_CUBE_DIAGONAL = RGB_EXTENT * _UNIT_CUBE_DIAGONAL;
+
+			inline int round(float x) {
 				assert(x >= 0.0f);
 				return std::floor(x + 0.5f);
 			}
 
-			inline
-			size_t quantize(float x, float step) {
+			inline size_t quantize(float x, float step) {
 				return round(x/step);
 			}
 
-			inline
-			size_t quantize_extended(float x) {
+			inline size_t quantize_extended(float x) {
 				return quantize(x, EXTENDED_STEP);
 			}
 
-			inline
-			size_t quantize_grey(float x) {
+			inline size_t quantize_grey(float x) {
 				return quantize(x, GREY_STEP);
 			}
 		}
@@ -931,36 +934,31 @@ namespace dye {
 		// ––––––––––––––––
 		// Public interface
 
-		inline
-		RGB rgb_from_grey_level(size_t l) {
+		inline RGB rgb_from_grey_level(size_t l) {
 			assert(l >= 0 && l <= GREY_LEVELS);
 			return RGB(l*GREY_STEP, l*GREY_STEP, l*GREY_STEP);
 		}
 
-		inline
-		RGB rgb_from_extended_levels(size_t rl, size_t gl, size_t bl) {
+		inline RGB rgb_from_extended_levels(size_t rl, size_t gl, size_t bl) {
 			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
 			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
 			assert(bl >= 0 && bl <= EXTENDED_LEVELS);
 			return RGB(rl*EXTENDED_STEP, gl*EXTENDED_STEP, bl*EXTENDED_STEP);
 		}
 
-		inline
-		size_t ECMA48_from_grey_level(size_t l) {
+		inline size_t ECMA48_from_grey_level(size_t l) {
 			assert(l >= 0 && l <= GREY_LEVELS);
 			return GREY_START + l;
 		}
 
-		inline
-		size_t ECMA48_from_extended_level(size_t rl, size_t gl, size_t bl) {
+		inline size_t ECMA48_from_extended_level(size_t rl, size_t gl, size_t bl) {
 			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
 			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
 			assert(bl >= 0 && bl <= EXTENDED_LEVELS);
 			return EXTENDED_START + rl*36 + gl*6 + bl;
 		}
 
-		inline
-		size_t ECMA48_from_rgb(size_t r, size_t g, size_t b) {
+		inline size_t ECMA48_from_rgb(size_t r, size_t g, size_t b) {
 			const RGB rgb(r,g,b);
 			const size_t qr = quantize_extended(r);
 			const size_t qg = quantize_extended(g);
@@ -987,53 +985,59 @@ namespace dye {
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
 
 namespace dye {
-	inline
-	bool is_stdout_stderr_tty(const std::ostream& s) {
-		return (s.rdbuf()==std::cout.rdbuf() && isatty(fileno(stdout)))
-		    || (s.rdbuf()==std::cerr.rdbuf() && isatty(fileno(stderr)));
-	}
+	// ··································
+	// Utility functions for manipulators
 
-	template <typename ObjectType>
-	class ObjectManipulator {
-		const std::string _control_sequence;
-		const ObjectType& _object;
-		public:
-			ObjectManipulator(const std::string& control_sequence, const ObjectType& object)
-				: _control_sequence(control_sequence), _object(object) {}
-			const std::string& control_sequence() const {return _control_sequence;}
-			const ObjectType& object() const {return _object; }
-	};
-
-	template <typename ObjectType>
-	inline
-	std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
-		if (is_stdout_stderr_tty(stream)) {
-			stream << m.control_sequence()
-			       << m.object()
-			       << ECMA48::default_color << ECMA48::default_background;
-		} else {
-			stream << m.object();
+	namespace {
+		inline bool is_stdout_stderr_tty(const std::ostream& s) {
+			return (s.rdbuf()==std::cout.rdbuf() && isatty(fileno(stdout)))
+			    || (s.rdbuf()==std::cerr.rdbuf() && isatty(fileno(stderr)));
 		}
-		return stream;
-	}
 
-	class Manipulator {
-		const std::string _control_sequence;
-		public:
-			Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
-			template <typename ObjectType>
-			ObjectManipulator<ObjectType> operator()(const ObjectType& object) const {
-				return ObjectManipulator<ObjectType>(_control_sequence, object);
+		template <typename ObjectType>
+		class ObjectManipulator {
+			const std::string _control_sequence;
+			const ObjectType& _object;
+			public:
+				ObjectManipulator(const std::string& control_sequence, const ObjectType& object)
+					: _control_sequence(control_sequence), _object(object) {}
+				const std::string& control_sequence() const {return _control_sequence;}
+				const ObjectType& object() const {return _object; }
+		};
+
+		template <typename ObjectType>
+		inline
+		std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
+			if (is_stdout_stderr_tty(stream)) {
+				stream << m.control_sequence()
+				       << m.object()
+				       << ECMA48::default_color << ECMA48::default_background;
+			} else {
+				stream << m.object();
 			}
-			const std::string& control_sequence() const {return _control_sequence; }
-	};
+			return stream;
+		}
 
-	inline
-	std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
-		if (is_stdout_stderr_tty(stream))
-			stream << m.control_sequence();
-		return stream;
+		class Manipulator {
+			const std::string _control_sequence;
+			public:
+				Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
+				template <typename ObjectType>
+				ObjectManipulator<ObjectType> operator()(const ObjectType& object) const {
+					return ObjectManipulator<ObjectType>(_control_sequence, object);
+				}
+				const std::string& control_sequence() const {return _control_sequence; }
+		};
+
+		inline std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
+			if (is_stdout_stderr_tty(stream))
+				stream << m.control_sequence();
+			return stream;
+		}
 	}
+
+	// ––––––––––––––––––––
+	// 8-color manipulators
 
 	const Manipulator   black(ECMA48::black);
 	const Manipulator     red(ECMA48::red);
@@ -1058,28 +1062,24 @@ namespace dye {
 	// –––––––––––––––––––––––––
 	// xterm256 RGB manipulators
 
-	inline
-	Manipulator fg256(size_t i) {
+	inline Manipulator fg256(size_t i) {
 		assert(i <= 255);
 		return ECMA48::foreground_256(i);
 	}
 
-	inline
-	Manipulator fg256(size_t r, size_t g, size_t b) {
+	inline Manipulator fg256(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
 		return ECMA48::foreground_256(xterm256::ECMA48_from_rgb(r,g,b));
 	}
 
-	inline
-	Manipulator bg256(size_t i) {
+	inline Manipulator bg256(size_t i) {
 		assert(i <= 255);
 		return ECMA48::background_256(i);
 	}
 
-	inline
-	Manipulator bg256(size_t r, size_t g, size_t b) {
+	inline Manipulator bg256(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
@@ -1089,16 +1089,14 @@ namespace dye {
 	// –––––––––––––––––––––––
 	// 24-bit RGB manipulators
 
-	inline
-	Manipulator fg24bit(size_t r, size_t g, size_t b) {
+	inline Manipulator fg24bit(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
 		return ECMA48::foreground_24bit(r,g,b);
 	}
 
-	inline
-	Manipulator bg24bit(size_t r, size_t g, size_t b) {
+	inline Manipulator bg24bit(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
@@ -1108,8 +1106,7 @@ namespace dye {
 	// ––––––––––––––––––
 	// Auto-selecting RGB
 
-	inline
-	bool terminal_is_24bit_capable() {
+	inline bool terminal_is_24bit_capable() {
 		// libvte based 24-bit terminals
 
 		char const* VTE_VERSION = std::getenv("VTE_VERSION");
@@ -1125,8 +1122,7 @@ namespace dye {
 
 	// RGB manipulators auto-selecting 256 color or 24-bit color base on capabilities
 
-	inline
-	Manipulator fg(size_t r, size_t g, size_t b) {
+	inline Manipulator fg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
@@ -1136,8 +1132,9 @@ namespace dye {
 			return fg256(r,g,b);
 	}
 
-	inline
-	Manipulator bg(size_t r, size_t g, size_t b) {
+	inline Manipulator fg(const RGB& rgb) { return fg(rgb.r, rgb.g, rgb.b); }
+
+	inline 	Manipulator bg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
@@ -1147,6 +1144,7 @@ namespace dye {
 			return bg256(r,g,b);
 	}
 
+	inline Manipulator bg(const RGB& rgb) { return bg(rgb.r, rgb.g, rgb.b); }
 }
 
 #endif
