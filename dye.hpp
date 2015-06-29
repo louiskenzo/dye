@@ -818,20 +818,20 @@ namespace dye {
 			}
 
 			float distance(const RGB& other) const {
-				return std::sqrt(std::pow(other.r-r,2)
-					           + std::pow(other.g-g,2)
-					           + std::pow(other.b-b,2));
+				return std::sqrt(std::pow(other.r-r,2.0f)
+				               + std::pow(other.g-g,2.0f)
+				               + std::pow(other.b-b,2.0f));
 			}
 
 			float distance_to_identity_line() const {
 			    // Returns the distance of the 3D point with coordinates (r,g,b) to the r=g=b line.
 			    // Simplification of http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
-			    return std::sqrt(std::pow(b-g,2) + std::pow(b-r,2) + std::pow(g-r,2))
+			    return std::sqrt(std::pow(b-g,2.0f) + std::pow(b-r,2.0f) + std::pow(g-r,2.0f))
 			         / std::sqrt(3.0f);
 			}
 
 			float distance_along_identity_line() const {
-				return std::sqrt(std::pow(norm(),2) - std::pow(distance_to_identity_line(),2));
+				return std::sqrt(std::pow(norm(),2.0f) - std::pow(distance_to_identity_line(),2.0f));
 			}
 
 			RGB projection_on_identity_line() const {
