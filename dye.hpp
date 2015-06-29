@@ -1211,9 +1211,7 @@ namespace dye {
 	    }
 
 	    inline RGB gray_function(float x) {
-	        return RGB(upramp(x, 1/2.0, 1.0),
-	                   upramp(x, 1/2.0, 1.0),
-	                   upramp(x, 1/2.0, 1.0));
+	        return RGB(x,x,x) * 255.0f;
 	    }
 	}
 
