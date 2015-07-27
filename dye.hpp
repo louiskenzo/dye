@@ -863,11 +863,58 @@ namespace dye {
 				return RGB(d,d,d);
 			}
 
+			float luminance() const {
+				return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+			}
+
+			float distanceLab(const RGB& other) const {
+				return RGBtoLab(*this).distance(RGBtoLab(other));
+			}
+
 		private:
 			bool _valid() const {
 				return (r>=0.0f && r<=255.0f) &&
 				       (g>=0.0f && g<=255.0f) &&
 				       (b>=0.0f && b<=255.0f);
+			}
+
+			static float Labf(float t) {
+				static const float tl = std::pow(6.0f/29.0f, 3.0f);
+				static const float a = 1.0f/3.0f * std::pow(29.0f/6.0f, 2.0f);
+				static const float b = 4.0f / 29.0f;
+
+				if (t > tl) return std::pow(t, 1.0f/3.0f);
+				else return a * t + b;
+			}
+
+			static RGB RGBtoXYZ(const RGB& rgb) {
+				return RGB((0.49f * rgb.r + 0.31f * rgb.g + 0.20f * rgb.b) / 0.17697f,
+				           (0.17697f * rgb.r + 0.81240f * rgb.g + 0.01063f * rgb.b) / 0.17697f,
+				           (0.01f * rgb.g + 0.99f * rgb.b) / 0.17697f);
+			}
+
+
+			static RGB XYZtoLab(const RGB& rgb) {
+				static const float Xn = 0.95047f;
+				static const float Yn = 1.0f;
+				static const float Zn = 1.08883f;
+
+				const float& X = rgb.r;
+				const float& Y = rgb.g;
+				const float& Z = rgb.b;
+
+				const float X_Xn = Labf(X/Xn);
+				const float Y_Yn = Labf(Y/Yn);
+				const float Z_Zn = Labf(Z/Zn);
+
+				return RGB(116.0f * Y_Yn - 16,
+				           500.0f * (X_Xn - Y_Yn),
+				           200.0f * (Y_Yn - Z_Zn));
+			}
+
+
+			static RGB RGBtoLab(const RGB& rgb) {
+				return XYZtoLab(RGBtoXYZ(rgb));
 			}
 	};
 
