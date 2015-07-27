@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 #include <limits>
 #include <string>
 #include <sstream>
@@ -805,9 +806,8 @@ namespace dye {
 			float r,g,b;
 
 			RGB(float r, float g, float b)
-				: r(r), g(g), b(b) {
-				assert(_valid());
-			}
+				: r(r), g(g), b(b)
+				{}
 
 			RGB operator*(float m) {
 				return RGB(r*m, g*m, b*m);
@@ -864,14 +864,14 @@ namespace dye {
 		// - The first 16 indices are the standard colors (0-7 for non-bold, 8-15 for
 		//   bold).
 		// - The middle 216 (6*6*6) colors are extended xterm colors. They are organized
-		//   in 6 lines of 36 codes, with internally uniform, increasing red values from
-		//   0 to 255; each line is subdivided in 6 blocks of 6 codes with internally
-		//   uniform, increasing green values from 0 to 255; each block is made of 6
-		//   codes, with increasing blue values from 0 to 255. Thus the RGB colorspace
-		//   is quantized in 255/6 = 42.5 increments. Note that 6 of those colors are
-		//   also grey levels, that coincide with grey levels in the last 24-color
-		//   block.
-		// - The last 24 colors are levels of grey, from black to white.
+		//   in 6 lines of 36 codes, with a first value at 0, second at 95, then
+		//   uniformly increasing red values from 0 to 255; each line is subdivided in 6
+		//   blocks of 6 codes with a first value at 0, second at 95, then uniformly
+		//   increasing green values from 0 to 255; each block is made of 6 codes, with
+		//   a first value at 0, second at 95, then uniformly increasing blue values
+		//   from 0 to 255. Note that 6 of those colors are also grey levels.
+		// - The last 24 colors are levels of grey, from black to white, *excluding*
+		//   black and white.
 
 		// –––––––––
 		// Constants
@@ -901,10 +901,15 @@ namespace dye {
 
 		// RGB space structure
 
-		const float  RGB_EXTENT = 255.0f;
+		const float RGB_EXTENT = 255.0f;
 
-		const float EXTENDED_STEP = RGB_EXTENT / (EXTENDED_LEVELS - 1);
-		const float     GREY_STEP = RGB_EXTENT /     (GREY_LEVELS - 1);
+		const float SECOND_EXTENDED_VALUE = 95.0f;
+		const float EXTENDED_STEP = (RGB_EXTENT - SECOND_EXTENDED_VALUE) / (EXTENDED_LEVELS - 2);
+
+		const float FIRST_GREY_VALUE = 8.0f;
+		const float  LAST_GREY_VALUE = 238.0f;
+		const float GREY_EXTENT = LAST_GREY_VALUE - FIRST_GREY_VALUE;
+		const float GREY_STEP = GREY_EXTENT / (GREY_LEVELS - 1);
 
 		// ·················
 		// Utility functions
@@ -912,6 +917,9 @@ namespace dye {
 		namespace {
 			const float _UNIT_CUBE_DIAGONAL = std::sqrt(3.0f);
 			const float  _RGB_CUBE_DIAGONAL = RGB_EXTENT * _UNIT_CUBE_DIAGONAL;
+			const float _GREY_CUBE_DIAGONAL_STEP = GREY_EXTENT * _UNIT_CUBE_DIAGONAL / (GREY_LEVELS - 1);
+			const float _FIRST_GREY_DIAGONAL_VALUE = FIRST_GREY_VALUE * _UNIT_CUBE_DIAGONAL;
+			const float  _LAST_GREY_DIAGONAL_VALUE =  LAST_GREY_VALUE * _UNIT_CUBE_DIAGONAL;
 
 			inline int round(float x) {
 				assert(x >= 0.0f);
@@ -922,12 +930,36 @@ namespace dye {
 				return round(x/step);
 			}
 
-			inline size_t quantize_extended(float x) {
-				return quantize(x, EXTENDED_STEP);
+			struct ExtendedLevels {
+				size_t r, g, b;
+				ExtendedLevels(size_t r, size_t g, size_t b) : r(r), g(g), b(b) {};
+			};
+
+			inline float extended_value_from_extended_level(size_t l) {
+				if (l == 0) return 0.0f;
+				else if (l == 1) return SECOND_EXTENDED_VALUE;
+				else return SECOND_EXTENDED_VALUE + (l-1)*EXTENDED_STEP;
 			}
 
-			inline size_t quantize_grey(float x) {
-				return quantize(x, GREY_STEP);
+			inline size_t extended_level_from_extended_value(float v) {
+				if (v <= SECOND_EXTENDED_VALUE/2.0f) return 0;
+				else if (v <= SECOND_EXTENDED_VALUE + EXTENDED_STEP/2.0f) return 1;
+				else return 1 + quantize(v - SECOND_EXTENDED_VALUE, EXTENDED_STEP);
+			}
+
+			inline ExtendedLevels closest_extended_levels_from_RGB(const RGB& rgb) {
+				return ExtendedLevels(extended_level_from_extended_value(rgb.r),
+				                      extended_level_from_extended_value(rgb.g),
+				                      extended_level_from_extended_value(rgb.b));
+			}
+
+			inline size_t closest_grey_level_from_RGB(const RGB& rgb) {
+				const float d_along_xyz = rgb.distance_along_identity_line();
+				if (d_along_xyz <= _FIRST_GREY_DIAGONAL_VALUE) return 0;
+				size_t q_level = quantize(d_along_xyz - _FIRST_GREY_DIAGONAL_VALUE,
+				                          _GREY_CUBE_DIAGONAL_STEP);
+				if (q_level >= GREY_LEVELS) return GREY_LEVELS - 1;
+				else return q_level;
 			}
 		}
 
@@ -935,47 +967,55 @@ namespace dye {
 		// Public interface
 
 		inline RGB rgb_from_grey_level(size_t l) {
-			assert(l >= 0 && l <= GREY_LEVELS);
-			return RGB(l*GREY_STEP, l*GREY_STEP, l*GREY_STEP);
+			assert(l >= 0 && l < GREY_LEVELS);
+			if (l == GREY_LEVELS) return RGB(255.0f,255.0f,255.0f);
+			const float grey_value = FIRST_GREY_VALUE + l*GREY_STEP;
+			return RGB(grey_value, grey_value, grey_value);
 		}
 
 		inline RGB rgb_from_extended_levels(size_t rl, size_t gl, size_t bl) {
-			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
-			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
-			assert(bl >= 0 && bl <= EXTENDED_LEVELS);
-			return RGB(rl*EXTENDED_STEP, gl*EXTENDED_STEP, bl*EXTENDED_STEP);
+			assert(rl >= 0 && rl < EXTENDED_LEVELS);
+			assert(gl >= 0 && gl < EXTENDED_LEVELS);
+			assert(bl >= 0 && bl < EXTENDED_LEVELS);
+			return RGB(extended_value_from_extended_level(rl),
+			           extended_value_from_extended_level(gl),
+			           extended_value_from_extended_level(bl));
+		}
+
+		inline RGB rgb_from_extended_levels(const ExtendedLevels& levels) {
+			return rgb_from_extended_levels(levels.r, levels.g, levels.b);
 		}
 
 		inline size_t ECMA48_from_grey_level(size_t l) {
-			assert(l >= 0 && l <= GREY_LEVELS);
+			assert(l >= 0 && l < GREY_LEVELS);
 			return GREY_START + l;
 		}
 
-		inline size_t ECMA48_from_extended_level(size_t rl, size_t gl, size_t bl) {
-			assert(rl >= 0 && rl <= EXTENDED_LEVELS);
-			assert(gl >= 0 && gl <= EXTENDED_LEVELS);
-			assert(bl >= 0 && bl <= EXTENDED_LEVELS);
+		inline size_t ECMA48_from_extended_levels(size_t rl, size_t gl, size_t bl) {
+			assert(rl >= 0 && rl < EXTENDED_LEVELS);
+			assert(gl >= 0 && gl < EXTENDED_LEVELS);
+			assert(bl >= 0 && bl < EXTENDED_LEVELS);
 			return EXTENDED_START + rl*36 + gl*6 + bl;
+		}
+
+		inline size_t ECMA48_from_extended_levels(const ExtendedLevels& levels) {
+			return ECMA48_from_extended_levels(levels.r, levels.g, levels.b);
 		}
 
 		inline size_t ECMA48_from_rgb(size_t r, size_t g, size_t b) {
 			const RGB rgb(r,g,b);
-			const size_t qr = quantize_extended(r);
-			const size_t qg = quantize_extended(g);
-			const size_t qb = quantize_extended(b);
-			const RGB qrgb = rgb_from_extended_levels(qr,qg,qb);
 
-			float d_along_xyz = rgb.distance_along_identity_line();
-			size_t closest_grey_level = quantize(d_along_xyz, GREY_STEP * _RGB_CUBE_DIAGONAL);
-			RGB closest_grey = rgb_from_grey_level(closest_grey_level);
+			const ExtendedLevels closest_extended_levels = closest_extended_levels_from_RGB(rgb);
+			const RGB closest_extended = rgb_from_extended_levels(closest_extended_levels);
 
-			float d_to_closest_grey = rgb.distance(closest_grey);
-			float d_to_closest_extended = rgb.distance(qrgb);
+			const size_t closest_grey_level = closest_grey_level_from_RGB(rgb);
+			const RGB closest_grey = rgb_from_grey_level(closest_grey_level);
 
-			if (d_to_closest_grey < d_to_closest_extended)
+			if (rgb.distance(closest_grey) < rgb.distance(closest_extended)) {
 				return ECMA48_from_grey_level(closest_grey_level);
-			else
-				return ECMA48_from_extended_level(qr,qg,qb);
+			} else {
+				return ECMA48_from_extended_levels(closest_extended_levels);
+			}
 		}
 	}
 }
