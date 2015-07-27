@@ -813,6 +813,30 @@ namespace dye {
 				return RGB(r*m, g*m, b*m);
 			}
 
+			// From https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
+			static RGB fromHSV(float H, float S, float V) {
+				assert(H >= 0.0f && H <= 360.0f);
+				assert(S >= 0.0f && S <= 1.0f);
+				assert(V >= 0.0f && V <= 1.0f);
+
+				const float C = V * S;
+				const float HH = H / 60.0f;
+				const float X = C * (1.0f - std::abs(std::fmod(HH, 2) - 1));
+				const float m = V - C;
+
+				float R1 = 0.0f, G1 = 0.0f, B1 = 0.0f;
+				if      (HH >= 0.0f && HH < 1.0f) R1 = C,    G1 = X,    B1 = 0.0f;
+				else if (HH >= 1.0f && HH < 2.0f) R1 = X,    G1 = C,    B1 = 0.0f;
+				else if (HH >= 2.0f && HH < 3.0f) R1 = 0.0f, G1 = C,    B1 = X;
+				else if (HH >= 3.0f && HH < 4.0f) R1 = 0.0f, G1 = X,    B1 = C;
+				else if (HH >= 4.0f && HH < 5.0f) R1 = X,    G1 = 0.0f, B1 = C;
+				else if (HH >= 5.0f && HH < 6.0f) R1 = C,    G1 = 0.0f, B1 = X;
+
+				return RGB(R1 + m,
+				           G1 + m,
+				           B1 + m) * 255.0f;
+			}
+
 			float norm() const {
 				return std::sqrt(std::pow(r,2) + std::pow(g,2) + std::pow(b,2));
 			}
@@ -1117,6 +1141,14 @@ namespace dye {
 		return ECMA48::foreground_256(xterm256::ECMA48_from_rgb(r,g,b));
 	}
 
+	inline Manipulator fg256(const RGB& rgb) {
+		return fg256(rgb.r, rgb.g, rgb.b);
+	}
+
+	inline Manipulator fg256HSV(float H, float S, float V) {
+		return fg256(RGB::fromHSV(H,S,V));
+	}
+
 	inline Manipulator bg256(size_t i) {
 		assert(i <= 255);
 		return ECMA48::background_256(i);
@@ -1127,6 +1159,14 @@ namespace dye {
 		assert(g <= 255);
 		assert(b <= 255);
 		return ECMA48::background_256(xterm256::ECMA48_from_rgb(r,g,b));
+	}
+
+	inline Manipulator bg256(const RGB& rgb) {
+		return bg256(rgb.r, rgb.g, rgb.b);
+	}
+
+	inline Manipulator bg256HSV(float H, float S, float V) {
+		return bg256(RGB::fromHSV(H,S,V));
 	}
 
 	// –––––––––––––––––––––––
@@ -1144,6 +1184,14 @@ namespace dye {
 		assert(g <= 255);
 		assert(b <= 255);
 		return ECMA48::background_24bit(r,g,b);
+	}
+
+	inline Manipulator bg24bit(const RGB& rgb) {
+		return bg24bit(rgb.r, rgb.g, rgb.b);
+	}
+
+	inline Manipulator bg24bitHSV(float H, float S, float V) {
+		return bg24bit(RGB::fromHSV(H,S,V));
 	}
 
 	// ––––––––––––––––––
@@ -1177,6 +1225,8 @@ namespace dye {
 
 	inline Manipulator fg(const RGB& rgb) { return fg(rgb.r, rgb.g, rgb.b); }
 
+	inline Manipulator fgHSV(float H, float S, float V) { return fg(RGB::fromHSV(H,S,V)); }
+
 	inline 	Manipulator bg(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
@@ -1188,6 +1238,8 @@ namespace dye {
 	}
 
 	inline Manipulator bg(const RGB& rgb) { return bg(rgb.r, rgb.g, rgb.b); }
+
+	inline Manipulator bgHSV(float H, float S, float V) { return bg(RGB::fromHSV(H,S,V)); }
 }
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //

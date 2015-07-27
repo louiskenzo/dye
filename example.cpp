@@ -93,10 +93,9 @@ int main() {
 	std::cout << "–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––\n"
 	             "RGB-triplets (24-bit if available, xterm256 approximation fallback)\n\n";
 
-	for (size_t r=0; r<256; r+=15) {
-		for (size_t g=0; g<256; g+=24)
-			for (size_t b=0; b<256; b+=24)
-				std::cout << dye::bg(r,g,b)(" ");
+	for (float v=1.0f; v>=0.0f; v-=0.05f) {
+		for (float h=0.0f; h<360.0f; h+=3.0f)
+			std::cout << dye::bgHSV(h,0.8f,v)(" ");
 		std::cout << std::endl;
 	}
 
