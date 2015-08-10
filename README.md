@@ -1,7 +1,7 @@
 __Concise, user-friendly C++ console coloring__
 
 * Single-header library
-* All ECMA-48 control sequences, xterm256 and 24-bit colors
+* All ECMA-48 control sequences, xterm-256 and 24-bit colors
 * Concise syntax with easy scoped color changes
 
 Quick preview:
@@ -12,7 +12,7 @@ Quick preview:
 
 int main() {
   std::cout << dye::red << "Red";
-  std::cout << dye::bg(0,136,255) << dye::white << "White on blue";
+  std::cout << ~dye::rgb(0,136,255) << dye::white << "White on blue";
   std::cout << dye::jet(1/100) << "Jet colormap";
   std::cout << dye::green("Green") << " not green anymore";
 }
@@ -32,12 +32,12 @@ Example
 API
 ===
 
-Named colors
-------------
+All color manipulators can be made into background color manipulator with the ~ unary operator.
 
-C++ standard stream manipulators to output ECM48 color codes.
+Indexed named colors
+--------------------
 
-Foreground colors:
+Standard xterm indexed colors:
 * `dye::black`
 * `dye::red`
 * `dye::green`
@@ -48,39 +48,20 @@ Foreground colors:
 * `dye::white`
 * `dye::reset`
 
-Background colors:
-* `dye::black_bg`
-* `dye::red_bg`
-* `dye::green_bg`
-* `dye::yellow_bg`
-* `dye::blue_bg`
-* `dye::magenta_bg`
-* `dye::cyan_bg`
-* `dye::white_bg`
-* `dye::reset_bg`
-
 Numerical colors
 ----------------
 
-C++ standard stream manipulators to output ECM48 color codes.
-
-24-bit/xterm256 auto-switching:
-* `dye::fg(r,g,b)`
-* `dye::bg(r,g,b)`
-* `dye::fgHSV(h,s,v)`
-* `dye::bgHSV(h,s,v)`
+24-bit/xterm-256 auto-switching:
+* `dye::rgb(r,g,b)`
+* `dye::hsv(h,s,v)`
 
 Forcing of 24-bit colors:
-* `dye::fg24bit(r,g,b)`
-* `dye::bg24bit(r,g,b)`
-* `dye::fg24bitHSV(h,s,v)`
-* `dye::bg24bitHSV(h,s,v)`
+* `dye::rgb24bit(r,g,b)`
+* `dye::hsv24bit(h,s,v)`
 
-Forcing of xterm256 colors:
-* `dye::fg256(r,g,b)`
-* `dye::bg256(r,g,b)`
-* `dye::fg256HSV(r,g,b)`
-* `dye::bg256HSV(r,g,b)`
+Forcing of xterm-256 colors:
+* `dye::rgb256(r,g,b)`
+* `dye::hsv256(r,g,b)`
 
 Colormaps
 ---------
@@ -100,7 +81,6 @@ Fast, pre-evaluated lookup table colormaps:
 * `dye::hsv100`
 * `dye::good100`
 * `dye::gray100`
-
 
 Utility functions
 -----------------
@@ -369,6 +349,6 @@ Scoped vs. state-changing manipulators
 
 Dye  manipulators can take 2 forms:
 * manipulator (e.g. `dye::red`)
-* manipulator("some text") (e.g. `dye::red_bg("Self-contained")`)
+* manipulator("some text") (e.g. `dye::red("Self-contained")`)
 
 This includes functional manipulators which already take an argument, like RGB manipulators: `dye::rgb(255,0,0)("Scoped")`

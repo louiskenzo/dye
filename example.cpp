@@ -1,15 +1,11 @@
 //––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––//
 
 #include "dye.hpp"
-#include <chrono>
 #include <iostream>
 #include <iomanip>
-#include <thread>
-
-void cadence(size_t ms=750) { std::this_thread::sleep_for(std::chrono::milliseconds(ms)); }
 
 int main() {
-	// ––––––––––
+	// ––––––––––––
 	// Basic colors
 
 	std::cout << dye::black("black")     << " "
@@ -34,7 +30,7 @@ int main() {
 	for (size_t i =  dye::xterm256::STANDARD_DIM_START ;
 		        i <= dye::xterm256::STANDARD_DIM_END ;
 		      ++i)
-		std::cout << dye::bg256(i)("     ");
+		std::cout << ~dye::rgb256(i)("     ");
 	std::cout << "\n               ";
 	for (size_t i =  dye::xterm256::STANDARD_DIM_START ;
 		        i <= dye::xterm256::STANDARD_DIM_END ;
@@ -47,7 +43,7 @@ int main() {
 	for (size_t i =  dye::xterm256::STANDARD_BRIGHT_START ;
 		        i <= dye::xterm256::STANDARD_BRIGHT_END ;
 		      ++i)
-		std::cout << dye::bg256(i)("     ");
+		std::cout << ~dye::rgb256(i)("     ");
 	std::cout << "\n               ";
 	for (size_t i =  dye::xterm256::STANDARD_BRIGHT_START ;
 		        i <= dye::xterm256::STANDARD_BRIGHT_END ;
@@ -64,7 +60,7 @@ int main() {
 		std::cout << "\n" << std::setw(3) << dye::xterm256::EXTENDED_START + r*36 << "  ";
 		for (size_t g=0; g<dye::xterm256::EXTENDED_LEVELS; ++g)
 			for (size_t b=0; b<dye::xterm256::EXTENDED_LEVELS; ++b)
-				std::cout << dye::bg256(dye::xterm256::EXTENDED_START + r*36 + g*6 + b)("   ");
+				std::cout << ~dye::rgb256(dye::xterm256::EXTENDED_START + r*36 + g*6 + b)("   ");
 	}
 
 	std::cout << "\n";
@@ -79,7 +75,7 @@ int main() {
 	std::cout << "Gray colors:\n\n";
 
 	for (size_t i=dye::xterm256::GREY_START; i<=dye::xterm256::GREY_END; ++i)
-		std::cout << dye::bg256(i)("    ");
+		std::cout << ~dye::rgb256(i)("    ");
 	std::cout << "\n";
 	for (size_t i=dye::xterm256::GREY_START; i<=dye::xterm256::GREY_END; ++i)
 		std::cout << std::setw(4) << i;
@@ -95,7 +91,7 @@ int main() {
 
 	for (float v=1.0f; v>=0.0f; v-=0.05f) {
 		for (float h=0.0f; h<360.0f; h+=3.0f)
-			std::cout << dye::bgHSV(h,0.8f,v)(" ");
+			std::cout << ~dye::hsv(h,0.8f,v)(" ");
 		std::cout << std::endl;
 	}
 
@@ -108,27 +104,27 @@ int main() {
 
 	std::cout << std::setw(5) << "Hot" << ": ";
 	for (size_t i=0; i<100; ++i)
-		std::cout << dye::hot.bg(i)(" ");
+		std::cout << ~dye::hot(i)(" ");
 	std::cout << std::endl;
 
 	std::cout << std::setw(5) << "Jet" << ": ";
 	for (size_t i=0; i<100; ++i)
-		std::cout << dye::jet.bg(i)(" ");
+		std::cout << ~dye::jet(i)(" ");
 	std::cout << std::endl;
 
 	std::cout << std::setw(5) << "HSV" << ": ";
 	for (size_t i=0; i<100; ++i)
-		std::cout << dye::hsv.bg(i)(" ");
+		std::cout << ~dye::rainbow(i)(" ");
 	std::cout << std::endl;
 
 	std::cout << std::setw(5) << "Good" << ": ";
 	for (size_t i=0; i<100; ++i)
-		std::cout << dye::good.bg(i)(" ");
+		std::cout << ~dye::good(i)(" ");
 	std::cout << std::endl;
 
 	std::cout << std::setw(5) << "Gray" << ": ";
 	for (size_t i=0; i<100; ++i)
-		std::cout << dye::gray.bg(i)(" ");
+		std::cout << ~dye::gray(i)(" ");
 	std::cout << std::endl;
 }
 

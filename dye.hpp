@@ -1062,136 +1062,254 @@ namespace dye {
 	// ––––––––––––––––––––––––
 	// Public manipulator tools
 
-	template <typename ObjectType>
-	class ObjectManipulator {
-		const std::string _control_sequence;
-		const ObjectType& _object;
+	class CachedManipulator {
+		mutable std::string _cached_control_sequence;
+		mutable bool        _cached;
 		public:
-			ObjectManipulator(const std::string& control_sequence, const ObjectType& object)
-				: _control_sequence(control_sequence), _object(object) {}
-			const std::string& control_sequence() const {return _control_sequence;}
-			const ObjectType& object() const {return _object; }
+			CachedManipulator() : _cached(false) {}
+			CachedManipulator(const std::string& control_sequence)
+				: _cached_control_sequence(control_sequence)
+				, _cached(true) {}
+			virtual ~CachedManipulator() {}
+
+			std::ostream& manipulate(std::ostream& stream) const {
+				if (!_cached) setCache(eval());
+				stream << _cached_control_sequence;
+				return stream;
+			}
+		protected:
+			virtual std::string eval() const {
+				return _cached_control_sequence;
+			}
+			void invalidate() const { _cached = false; }
+			void setCache(const std::string& new_cached_control_sequence) const {
+				_cached_control_sequence = new_cached_control_sequence;
+				_cached = true;
+			}
 	};
 
-	template <typename ObjectType>
-	inline
-	std::ostream& operator<<(std::ostream& stream, const ObjectManipulator<ObjectType>& m) {
-		if (is_stdout_stderr_tty(stream)) {
-			stream << m.control_sequence()
-			       << m.object()
-			       << ECMA48::default_color << ECMA48::default_background;
-		} else {
-			stream << m.object();
-		}
+	typedef CachedManipulator Manipulator;
+
+	inline std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
+		if (is_stdout_stderr_tty(stream)) return m.manipulate(stream);
 		return stream;
 	}
 
-	class Manipulator {
-		const std::string _control_sequence;
+	// Manipulator generators
+
+	class ColorManipulatorGenerator {
 		public:
-			Manipulator(const std::string& control_sequence) : _control_sequence(control_sequence) {}
-			template <typename ObjectType>
-			ObjectManipulator<ObjectType> operator()(const ObjectType& object) const {
-				return ObjectManipulator<ObjectType>(_control_sequence, object);
-			}
-			const std::string& control_sequence() const {return _control_sequence; }
+			virtual ~ColorManipulatorGenerator() {};
+			virtual std::string fg() const = 0;
+			virtual std::string bg() const = 0;
+			virtual ColorManipulatorGenerator* clone() const = 0;
 	};
 
-	inline std::ostream& operator<<(std::ostream& stream, const Manipulator& m) {
-		if (is_stdout_stderr_tty(stream))
-			stream << m.control_sequence();
+	class PrecomputedColorGenerator : public ColorManipulatorGenerator {
+		const std::string _fg;
+		const std::string _bg;
+		public:
+			PrecomputedColorGenerator(const std::string& fg, const std::string& bg) : _fg(fg), _bg(bg) {}
+			virtual std::string fg() const { return _fg; }
+			virtual std::string bg() const { return _bg; }
+			virtual ColorManipulatorGenerator* clone() const {
+				return new PrecomputedColorGenerator(_fg, _bg);
+			}
+	};
+
+	class Xterm256Generator : public ColorManipulatorGenerator {
+		size_t _i;
+		public:
+			Xterm256Generator(size_t i) : _i(i) {}
+			virtual std::string fg() const { return ECMA48::foreground_256(_i); }
+			virtual std::string bg() const { return ECMA48::background_256(_i); }
+			virtual ColorManipulatorGenerator* clone() const {
+				return new Xterm256Generator(_i);
+			}
+	};
+
+	class Xterm24bitGenerator : public ColorManipulatorGenerator {
+		size_t _r, _g, _b;
+		public:
+			Xterm24bitGenerator(size_t r, size_t g, size_t b) : _r(r), _g(g), _b(b) {}
+			Xterm24bitGenerator(const RGB& c) : _r(c.r), _g(c.g), _b(c.b) {}
+			virtual std::string fg() const { return ECMA48::foreground_24bit(_r,_g,_b); }
+			virtual std::string bg() const { return ECMA48::background_24bit(_r,_g,_b); }
+			virtual ColorManipulatorGenerator* clone() const {
+				return new Xterm24bitGenerator(_r, _g, _b);
+			}
+	};
+
+	// Color manipulators expressions
+
+	// Forward declarations
+	template <typename CM, typename ObjectType> class ScopedColorManipulator;
+	template <typename CM> class NegatedColorManipulator;
+
+	template <typename CM>
+	struct ColorManipulatorExpression {
+		std::ostream& manipulate(std::ostream& s, bool inverted = false) const {
+			return static_cast<const CM&>(*this).manipulate(s, inverted);
+		}
+
+		std::string fg() const { std::stringstream ss; manipulate(ss);       return ss.str(); }
+		std::string bg() const { std::stringstream ss; manipulate(ss, true); return ss.str(); }
+
+		operator CM&()             { return static_cast<      CM&>(*this); }
+		operator CM const&() const { return static_cast<const CM&>(*this); }
+
+		template <typename ObjectType>
+		ScopedColorManipulator<CM,ObjectType> operator()(const ObjectType& object) const {
+			return ScopedColorManipulator<CM,ObjectType>(*this, object);
+		}
+
+		NegatedColorManipulator<CM> operator~() const {
+			return NegatedColorManipulator<CM>(*this);
+		}
+	};
+
+	template <typename CM>
+	inline std::ostream& operator<<(std::ostream& stream, const ColorManipulatorExpression<CM>& cm) {
+		if (is_stdout_stderr_tty(stream)) return cm.manipulate(stream);
+		return stream;
+	}
+
+	template <typename CM>
+	class NegatedColorManipulator : public ColorManipulatorExpression< NegatedColorManipulator<CM> > {
+		const CM& _cm;
+		public:
+			NegatedColorManipulator(const ColorManipulatorExpression<CM>& cm) : _cm(cm) {}
+			std::ostream& manipulate(std::ostream& stream, bool inverted = false) const {
+				return _cm.manipulate(stream, !inverted);
+			}
+	};
+
+	template <typename CM, typename ObjectType>
+	class ScopedColorManipulator : public ColorManipulatorExpression< ScopedColorManipulator<CM,ObjectType> > {
+		const CM& _cm;
+		const ObjectType& _object;
+
+		public:
+			ScopedColorManipulator(const CM& cm, const ObjectType& object)
+				: _cm(cm), _object(object) {}
+
+			std::ostream& manipulate(std::ostream& stream, bool inverted = false) const {
+				if (!is_stdout_stderr_tty(stream)) {
+					stream << _object;
+					return stream;
+				} else {
+					_cm.manipulate(stream, inverted);
+					stream << _object;
+					return reset(stream);
+				}
+			}
+
+		private:
+			static std::ostream& reset(std::ostream& stream) {
+				// TODO Reset attributes more thoroughly and efficiently
+				stream << ECMA48::default_color << ECMA48::default_background;
+				return stream;
+			}
+	};
+
+	// Color manipulators
+
+	class ColorManipulator : public CachedManipulator, public ColorManipulatorExpression<ColorManipulator> {
+		ColorManipulatorGenerator* _cmg;
+		bool _is_bg;
+		public:
+			ColorManipulator(ColorManipulatorGenerator* cmg) : _cmg(cmg), _is_bg(false) {}
+			ColorManipulator(const ColorManipulator& other)
+				: _cmg(other._cmg->clone()), _is_bg(other._is_bg) {}
+			template <typename CM>
+			ColorManipulator(const ColorManipulatorExpression<CM>& cm)
+				: _cmg(new PrecomputedColorGenerator(cm.fg(), cm.bg()))
+				, _is_bg(false) {}
+			virtual ~ColorManipulator() { delete _cmg; };
+
+			// Convenience static constructors
+			static ColorManipulator precomputedColor(const std::string& fg, const std::string& bg) {
+				return ColorManipulator(new PrecomputedColorGenerator(fg, bg));
+			}
+			static ColorManipulator xterm256(size_t i) { return ColorManipulator(new Xterm256Generator(i)); }
+			static ColorManipulator xterm24bit(size_t r, size_t g, size_t b) {
+				return ColorManipulator(new Xterm24bitGenerator(r,g,b));
+			}
+			static ColorManipulator xterm24bit(const RGB& c) {
+				return xterm24bit(c.r, c.g, c.b);
+			}
+
+			bool is_bg() const { return _is_bg; }
+			void invert() { _is_bg = !_is_bg; CachedManipulator::invalidate(); }
+
+			std::ostream& manipulate(std::ostream& stream, bool inverted = false) const {
+				if (is_stdout_stderr_tty(stream)) {
+					if (_is_bg != inverted) CachedManipulator::setCache(_cmg->bg());
+					else CachedManipulator::setCache(_cmg->fg());
+
+					return CachedManipulator::manipulate(stream);
+				}
+				return stream;
+			}
+	};
+
+	inline std::ostream& operator<<(std::ostream& stream, const ColorManipulator& cm) {
+		if (is_stdout_stderr_tty(stream)) return cm.manipulate(stream);
 		return stream;
 	}
 
 	// ––––––––––––––––––––
 	// 8-color manipulators
 
-	const Manipulator   black(ECMA48::black);
-	const Manipulator     red(ECMA48::red);
-	const Manipulator   green(ECMA48::green);
-	const Manipulator  yellow(ECMA48::yellow);
-	const Manipulator    blue(ECMA48::blue);
-	const Manipulator magenta(ECMA48::magenta);
-	const Manipulator    cyan(ECMA48::cyan);
-	const Manipulator   white(ECMA48::white);
-	const Manipulator   reset(ECMA48::default_color);
-
-	const Manipulator   black_bg(ECMA48::black_background);
-	const Manipulator     red_bg(ECMA48::red_background);
-	const Manipulator   green_bg(ECMA48::green_background);
-	const Manipulator  yellow_bg(ECMA48::yellow_background);
-	const Manipulator    blue_bg(ECMA48::blue_background);
-	const Manipulator magenta_bg(ECMA48::magenta_background);
-	const Manipulator    cyan_bg(ECMA48::cyan_background);
-	const Manipulator   white_bg(ECMA48::white_background);
-	const Manipulator   reset_bg(ECMA48::default_background);
+	const ColorManipulator   black = ColorManipulator::precomputedColor(ECMA48::black,   ECMA48::black_background);
+	const ColorManipulator     red = ColorManipulator::precomputedColor(ECMA48::red,     ECMA48::red_background);
+	const ColorManipulator   green = ColorManipulator::precomputedColor(ECMA48::green,   ECMA48::green_background);
+	const ColorManipulator  yellow = ColorManipulator::precomputedColor(ECMA48::yellow,  ECMA48::yellow_background);
+	const ColorManipulator    blue = ColorManipulator::precomputedColor(ECMA48::blue,    ECMA48::blue_background);
+	const ColorManipulator magenta = ColorManipulator::precomputedColor(ECMA48::magenta, ECMA48::magenta_background);
+	const ColorManipulator    cyan = ColorManipulator::precomputedColor(ECMA48::cyan,    ECMA48::cyan_background);
+	const ColorManipulator   white = ColorManipulator::precomputedColor(ECMA48::white,   ECMA48::white_background);
+	const Manipulator reset(ECMA48::default_color);
 
 	// –––––––––––––––––––––––––
 	// xterm256 RGB manipulators
 
-	inline Manipulator fg256(size_t i) {
+	inline ColorManipulator rgb256(size_t i) {
 		assert(i <= 255);
-		return ECMA48::foreground_256(i);
+		return ColorManipulator::xterm256(i);
 	}
 
-	inline Manipulator fg256(size_t r, size_t g, size_t b) {
+	inline ColorManipulator rgb256(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
-		return ECMA48::foreground_256(xterm256::ECMA48_from_rgb(r,g,b));
+		return ColorManipulator::xterm256(xterm256::ECMA48_from_rgb(r,g,b));
 	}
 
-	inline Manipulator fg256(const RGB& rgb) {
-		return fg256(rgb.r, rgb.g, rgb.b);
+	inline ColorManipulator rgb256(const RGB& c) {
+		return rgb256(c.r, c.g, c.b);
 	}
 
-	inline Manipulator fg256HSV(float H, float S, float V) {
-		return fg256(RGB::fromHSV(H,S,V));
-	}
-
-	inline Manipulator bg256(size_t i) {
-		assert(i <= 255);
-		return ECMA48::background_256(i);
-	}
-
-	inline Manipulator bg256(size_t r, size_t g, size_t b) {
-		assert(r <= 255);
-		assert(g <= 255);
-		assert(b <= 255);
-		return ECMA48::background_256(xterm256::ECMA48_from_rgb(r,g,b));
-	}
-
-	inline Manipulator bg256(const RGB& rgb) {
-		return bg256(rgb.r, rgb.g, rgb.b);
-	}
-
-	inline Manipulator bg256HSV(float H, float S, float V) {
-		return bg256(RGB::fromHSV(H,S,V));
+	inline ColorManipulator hsv256(float H, float S, float V) {
+		return rgb256(RGB::fromHSV(H,S,V));
 	}
 
 	// –––––––––––––––––––––––
 	// 24-bit RGB manipulators
 
-	inline Manipulator fg24bit(size_t r, size_t g, size_t b) {
+	inline ColorManipulator rgb24bit(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
-		return ECMA48::foreground_24bit(r,g,b);
+		return ColorManipulator::xterm24bit(r,g,b);
 	}
 
-	inline Manipulator bg24bit(size_t r, size_t g, size_t b) {
-		assert(r <= 255);
-		assert(g <= 255);
-		assert(b <= 255);
-		return ECMA48::background_24bit(r,g,b);
+	inline ColorManipulator rgb24bit(const RGB& c) {
+		return rgb24bit(c.r, c.g, c.b);
 	}
 
-	inline Manipulator bg24bit(const RGB& rgb) {
-		return bg24bit(rgb.r, rgb.g, rgb.b);
-	}
-
-	inline Manipulator bg24bitHSV(float H, float S, float V) {
-		return bg24bit(RGB::fromHSV(H,S,V));
+	inline ColorManipulator hsv24bit(float H, float S, float V) {
+		return rgb24bit(RGB::fromHSV(H,S,V));
 	}
 
 	// ––––––––––––––––––
@@ -1213,33 +1331,19 @@ namespace dye {
 
 	// RGB manipulators auto-selecting 256 color or 24-bit color base on capabilities
 
-	inline Manipulator fg(size_t r, size_t g, size_t b) {
+	inline ColorManipulator rgb(size_t r, size_t g, size_t b) {
 		assert(r <= 255);
 		assert(g <= 255);
 		assert(b <= 255);
 		if (_is_24bit_capable)
-			return fg24bit(r,g,b);
+			return rgb24bit(r,g,b);
 		else
-			return fg256(r,g,b);
+			return rgb256(r,g,b);
 	}
 
-	inline Manipulator fg(const RGB& rgb) { return fg(rgb.r, rgb.g, rgb.b); }
+	inline ColorManipulator rgb(const RGB& c) { return rgb(c.r, c.g, c.b); }
 
-	inline Manipulator fgHSV(float H, float S, float V) { return fg(RGB::fromHSV(H,S,V)); }
-
-	inline 	Manipulator bg(size_t r, size_t g, size_t b) {
-		assert(r <= 255);
-		assert(g <= 255);
-		assert(b <= 255);
-		if (_is_24bit_capable)
-			return bg24bit(r,g,b);
-		else
-			return bg256(r,g,b);
-	}
-
-	inline Manipulator bg(const RGB& rgb) { return bg(rgb.r, rgb.g, rgb.b); }
-
-	inline Manipulator bgHSV(float H, float S, float V) { return bg(RGB::fromHSV(H,S,V)); }
+	inline ColorManipulator hsv(float H, float S, float V) { return rgb(RGB::fromHSV(H,S,V)); }
 }
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– //
@@ -1323,46 +1427,18 @@ namespace dye {
 		public:
 			Colormap(ColormapFunction f) : f_(f) {}
 
-			// fg
-
-			inline Manipulator fg(float x) const {
-				return dye::fg(f_(normalize(x)));
-			}
-
-			inline Manipulator fg(size_t percentage) const {
-				return fg(percentage / 100.0f);
-			}
-
-			inline Manipulator fg(int percentage) const {
-				return fg(percentage / 100.0f);
-			}
-
-			// bg
-
-			inline Manipulator bg(float x) const {
-				return dye::bg(f_(normalize(x)));
-			}
-
-			inline Manipulator bg(size_t percentage) const {
-				return bg(percentage / 100.0f);
-			}
-
-			inline Manipulator bg(int percentage) const {
-				return bg(percentage / 100.0f);
-			}
-
 			// operator()
 
-			Manipulator operator()(float x) const {
-				return fg(x);
+			ColorManipulator operator()(float x) const {
+				return dye::rgb(f_(normalize(x)));
 			}
 
-			Manipulator operator()(size_t percentage) const {
-				return fg(percentage);
+			ColorManipulator operator()(size_t percentage) const {
+				return operator()(percentage / 100.0f);
 			}
 
-			Manipulator operator()(int percentage) const {
-				return fg(percentage);
+			ColorManipulator operator()(int percentage) const {
+				return operator()(percentage / 100.0f);
 			}
 
 		private:
@@ -1385,8 +1461,8 @@ namespace dye {
 				bg_lut_.reserve(SIZE);
 
 				for (size_t i=0; i<SIZE; ++i) {
-					fg_lut_.push_back(c.fg(i / float(SIZE-1)));
-					bg_lut_.push_back(c.bg(i / float(SIZE-1)));
+					fg_lut_.push_back(c(i / float(SIZE-1)));
+					bg_lut_.push_back(~c(i / float(SIZE-1)));
 				}
 			}
 
@@ -1399,51 +1475,23 @@ namespace dye {
 				computeLUT_(c);
 			}
 
-			// fg
+			// operator()
 
-			inline Manipulator fg(float x) const {
+			ColorManipulator operator()(float x) const {
 				return fg_lut_[index(x)];
 			}
 
-			inline Manipulator fg(size_t percentage) const {
-				return fg(percentage / 100.0f);
+			ColorManipulator operator()(size_t percentage) const {
+				return operator()(percentage / 100.0f);
 			}
 
-			inline Manipulator fg(int percentage) const {
-				return fg(percentage / 100.0f);
-			}
-
-			// bg
-
-			inline Manipulator bg(float x) const {
-				return bg_lut_[index(x)];
-			}
-
-			inline Manipulator bg(size_t percentage) const {
-				return bg(percentage / 100.0f);
-			}
-
-			inline Manipulator bg(int percentage) const {
-				return bg(percentage / 100.0f);
-			}
-
-			// operator()
-
-			Manipulator operator()(float x) const {
-				return fg(x);
-			}
-
-			Manipulator operator()(size_t percentage) const {
-				return fg(percentage);
-			}
-
-			Manipulator operator()(int percentage) const {
-				return fg(percentage);
+			ColorManipulator operator()(int percentage) const {
+				return operator()(percentage / 100.0f);
 			}
 
 		private:
-			std::vector<Manipulator> fg_lut_;
-			std::vector<Manipulator> bg_lut_;
+			std::vector<ColorManipulator> fg_lut_;
+			std::vector<ColorManipulator> bg_lut_;
 	};
 
 	// –––––––––
@@ -1451,13 +1499,13 @@ namespace dye {
 
 	Colormap  hot(hot_function);
 	Colormap  jet(jet_function);
-	Colormap  hsv(hsv_function);
+	Colormap rainbow(hsv_function);
 	Colormap good(good_function);
 	Colormap gray(gray_function);
 
 	ColormapLUT<100>  hot100(hot);
 	ColormapLUT<100>  jet100(jet);
-	ColormapLUT<100>  hsv100(hsv);
+	ColormapLUT<100> rainbow100(rainbow);
 	ColormapLUT<100> good100(good);
 	ColormapLUT<100> gray100(gray);
 }
